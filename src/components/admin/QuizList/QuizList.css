@@ -1,0 +1,20 @@
+/* Add to your existing CSS file */
+.print-container {
+  padding: 2rem;
+  background: white;
+  min-height: 100vh;
+}
+
+@media print {
+  .print-controls {
+    display: none !important;
+  }
+  
+  .print-container {
+    padding: 0;
+  }
+
+  nav {
+    display: none !important;
+  }
+}
