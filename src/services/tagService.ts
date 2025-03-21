@@ -1,11 +1,22 @@
 import { api } from './api';
+import { TagSystem } from '../types/types';
 
 export class TagService {
-  async getAllTags() {
+  async getAllTags(): Promise<TagSystem> {
     try {
       const response = await api.get('/tags');
-      return response.data;
+      
+      // Ensure topics are properly processed
+      const data = response.data;
+      
+      // Convert topics from object to Map if needed
+      if (data.topics && typeof data.topics === 'object' && !Array.isArray(data.topics)) {
+        console.log('Processing topics from backend response:', Object.keys(data.topics).length);
+      }
+      
+      return data;
     } catch (error) {
+      console.error('Error fetching tags:', error);
       throw new Error('Failed to fetch tags');
     }
   }
@@ -75,18 +86,45 @@ export class TagService {
         }
 
         const response = await api.post('/tags/upload', formattedData);
+        
+        // Log the response to help with debugging
+        console.log('CSV upload response:', {
+          success: response.data.success,
+          message: response.data.message,
+          topicsSize: response.data.topics ? Object.keys(response.data.topics).length : 0
+        });
+        
         return {
           success: response.data.success,
           message: response.data.message,
-          counts: response.data.counts
+          counts: response.data.counts,
+          // Include the updated tag system in the response
+          tagSystem: {
+            hierarchy: response.data.hierarchy,
+            subjects: response.data.subjects,
+            chapters: response.data.chapters,
+            topics: response.data.topics
+          }
         };
       } catch (error: any) {
+        console.error('Error uploading CSV:', error);
         if (error.response?.data?.message) {
           throw new Error(error.response.data.message);
         }
         throw new Error('Failed to upload CSV');
       }
     }
+    
+  // Add a debug method to help troubleshoot tag system issues
+  async debugTagSystem() {
+    try {
+      const response = await api.get('/tags/debug');
+      return response.data;
+    } catch (error) {
+      console.error('Error debugging tag system:', error);
+      throw new Error('Failed to debug tag system');
+    }
+  }
 }
 
 export const tagService = new TagService();

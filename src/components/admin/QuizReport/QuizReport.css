@@ -1,0 +1,9 @@
+.quiz-report {
+  margin-bottom: 2rem;
+}
+
+@media print {
+  .quiz-report button {
+    display: none;
+  }
+}

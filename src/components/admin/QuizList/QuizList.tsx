@@ -1,28 +1,86 @@
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
 import { Quiz } from '../../../types/types';
 import { PrintView } from '../PrintView/PrintView';
+import { quizService } from '../../../services/quizService';
 import './QuizList.css';
 
 interface QuizListProps {
-  quizzes: Quiz[];
   onEditQuiz: (quiz: Quiz) => void;
   onDeleteQuiz: (quizId: string) => void;
   onDuplicateQuiz: (quiz: Quiz) => void;
   onTakeQuiz: (quiz: Quiz) => void;
-  onCreateQuiz: () => void; // Add this for tab switching
+  onCreateQuiz: () => void;
 }
 
 export function QuizList({ 
-  quizzes, 
   onEditQuiz, 
   onDeleteQuiz, 
   onDuplicateQuiz, 
   onTakeQuiz,
   onCreateQuiz
 }: QuizListProps) {
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedQuizForPrint, setSelectedQuizForPrint] = useState<Quiz | null>(null);
   const [showPrintView, setShowPrintView] = useState(false);
+
+// Helper function to calculate total marks if not provided
+// Update the calculateTotalMarks function to handle populated questions
+function calculateTotalMarks(quiz: Quiz): number {
+  if (!quiz.sections) return 0;
+  
+  return quiz.sections.reduce((total, section) => {
+    // Handle both string IDs and populated question objects
+    const sectionMarks = section.questions?.reduce((sum, q) => {
+      // Check if q is a string (ID) or an object (populated question)
+      if (typeof q === 'string') {
+        return sum + (section.marks || 0); // Use section marks as fallback
+      } else {
+        // q is a populated question object
+        return sum + (q.score || q.marks || section.marks || 0);
+      }
+    }, 0) || 0;
+    
+    return total + sectionMarks;
+  }, 0);
+}
+
+// Update the useEffect for fetching quizzes
+useEffect(() => {
+  const fetchQuizzes = async () => {
+    try {
+      setLoading(true);
+      const response = await quizService.getQuizzes();
+      console.log('Quizzes with populated questions:', response.quizzes);
+      
+      // Check if we have quizzes data with populated questions
+      if (response.quizzes) {
+        // Ensure each quiz has an id property
+        const processedQuizzes = response.quizzes.map(quiz => {
+          // If quiz doesn't have id but has _id, use _id as id
+          if (!quiz.id && quiz._id) {
+            return { ...quiz, id: quiz._id };
+          }
+          return quiz;
+        });
+        
+        setQuizzes(processedQuizzes);
+      } else {
+        setQuizzes(response);
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching quizzes:', err);
+      setError('Failed to load quizzes. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchQuizzes();
+}, []);
 
   const handlePrintQuiz = (quiz: Quiz) => {
     setSelectedQuizForPrint(quiz);
@@ -41,6 +99,20 @@ export function QuizList({
     const navbar = document.querySelector('nav');
     if (navbar) {
       navbar.style.display = 'flex';
+    }
+  };
+
+  // Handle quiz deletion with backend integration
+  const handleDeleteQuiz = async (quizId: string) => {
+    if (window.confirm('Are you sure you want to delete this quiz?')) {
+      try {
+        await quizService.deleteQuiz(quizId);
+        setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
+        onDeleteQuiz(quizId);
+      } catch (err) {
+        console.error('Error deleting quiz:', err);
+        alert('Failed to delete quiz. Please try again.');
+      }
     }
   };
 
@@ -98,87 +170,110 @@ export function QuizList({
               </button>
             </div>
           </div>
-          <div className="mt-8 flow-root">
-            <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead>
-                    <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                        Title
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Duration
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Total Marks
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Sections
-                      </th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {quizzes.map((quiz) => (
-                      <tr key={quiz.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                          {quiz.title}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {quiz.totalDuration} minutes
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {quiz.totalMarks}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {quiz.sections.length}
-                        </td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handlePrintQuiz(quiz)}
-                              className="text-purple-600 hover:text-purple-900"
-                            >
-                              Print Quiz
-                            </button>
-                            <button
-                              onClick={() => onTakeQuiz(quiz)}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              Take Quiz
-                            </button>
-                            <button
-                              onClick={() => onEditQuiz(quiz)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => onDuplicateQuiz(quiz)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Duplicate
-                            </button>
-                            <button
-                              onClick={() => onDeleteQuiz(quiz.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
+
+          {loading && (
+            <div className="flex justify-center items-center py-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mt-4">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && quizzes.length === 0 && (
+            <div className="text-center py-10">
+              <p className="text-gray-500">No quizzes found. Create your first quiz!</p>
+            </div>
+          )}
+
+          {!loading && quizzes.length > 0 && (
+            <div className="mt-8 flow-root">
+              <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                  <table className="min-w-full divide-y divide-gray-300">
+                    <thead>
+                      <tr>
+                        <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                          Title
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                          Duration
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                          Total Marks
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                          Sections
+                        </th>
+                        <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
+                          <span className="sr-only">Actions</span>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {quizzes.map((quiz) => (
+                        <tr key={quiz.id}>
+                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
+                            {quiz.title}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {quiz.total_duration || quiz.totalDuration} minutes
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {quiz.totalMarks || calculateTotalMarks(quiz)}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            {quiz.sections?.length || 0}
+                          </td>
+                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => handlePrintQuiz(quiz)}
+                                className="text-purple-600 hover:text-purple-900"
+                              >
+                                Print Quiz
+                              </button>
+                              <button
+                                onClick={() => onTakeQuiz(quiz)}
+                                className="text-green-600 hover:text-green-900"
+                              >
+                                Take Quiz
+                              </button>
+                              <button
+                                onClick={() => onEditQuiz(quiz)}
+                                className="text-indigo-600 hover:text-indigo-900"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => onDuplicateQuiz(quiz)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Duplicate
+                              </button>
+                              <button
+                                onClick={() => handleDeleteQuiz(quiz.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-          </div>
+    </div>
   );
 }
+
+

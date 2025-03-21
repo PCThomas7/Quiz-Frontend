@@ -1,51 +1,31 @@
 // src/services/quizService.js
 import { api } from './api';
 
-const quizService = {
+export const quizService = {
   // Quiz CRUD Operations
   getQuizzes: async () => {
-    try {
-      const response = await api.get('/quizzes');
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch quizzes');
-    }
+    const response = await api.get('/quizzes');
+    return response.data;
   },
   
   getQuiz: async (quizId) => {
-    try {
-      const response = await api.get(`/quizzes/${quizId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch quiz details');
-    }
+    const response = await api.get(`/quizzes/${quizId}`);
+    return response.data;
   },
   
   createQuiz: async (quizData) => {
-    try {
-      const response = await api.post('/quizzes', quizData);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to create quiz');
-    }
+    const response = await api.post('/quizzes', quizData);
+    return response.data;
   },
   
   updateQuiz: async (quizId, quizData) => {
-    try {
-      const response = await api.put(`/quizzes/${quizId}`, quizData);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to update quiz');
-    }
+    const response = await api.put(`/quizzes/${quizId}`, quizData);
+    return response.data;
   },
   
   deleteQuiz: async (quizId) => {
-    try {
-      const response = await api.delete(`/quizzes/${quizId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to delete quiz');
-    }
+    const response = await api.delete(`/quizzes/${quizId}`);
+    return response.data;
   },
   
   // Question Operations
@@ -150,5 +130,4 @@ const quizService = {
     }
   }
 };
-
 export default quizService;

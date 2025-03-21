@@ -160,28 +160,28 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
     setIsReplaceModalOpen(false);
   };
 
-  const getQuizUsage = (questionId: string) => {
-    return quizzes?.filter((quiz) =>
-      quiz.sections?.some((section) =>
-        section.questions?.some((q) => q.id === questionId)
-      )
-    );
+  // In the getQuizUsage function
+  const getQuizUsage = (quizId: string) => {
+    if (!quizzes || quizzes.length === 0) return [];
+    
+    return quizzes.filter(quiz => {
+      // Add null check for quiz and quiz.sections
+      if (!quiz || !quiz.sections) return false;
+      
+      return quiz.id === quizId;
+    });
   };
-
-  const isQuestionUsedInQuiz = (questionId: string) => {
-    return quizzes?.some((quiz) =>
-      quiz.sections?.some((section) =>
-        section.questions?.some((q) => q.id === questionId)
-      )
-    );
-  };
-
-  const renderTags = (tags: Tags, question: Question) => {
+  
+  // In the renderTags function
+  const renderTags = (questionTags: any, question: Question) => {
+    // Use the questionTags parameter directly instead of undefined 'tags'
+    if (!questionTags) return null;
+    
     const usedInQuizzes = getQuizUsage(question.id);
-
+    
     return (
       <div className="flex flex-wrap gap-2 mt-2">
-        {Object?.entries(tags)?.map(
+        {Object.entries(questionTags).map(
           ([key, value]) =>
             value && (
               <span

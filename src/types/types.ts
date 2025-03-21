@@ -13,22 +13,30 @@ export interface QuestionTags {
 }
 
 export interface Question {
+  _id: string;
   id: string;
   question_text: string;
   option_a: string;
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_answer: string | string[] | number;
-  explanation?: string;
-  image_url?: string;
-  option_a_image_url?: string;
-  option_b_image_url?: string;
-  option_c_image_url?: string;
-  option_d_image_url?: string;
-  explanation_image_url?: string;
-  tags: QuestionTags;
+  correct_answer: string;
+  explanation: string;
+  tags: Tags;
   usedInQuizzes?: string[];
+}
+
+export interface ApiResponse {
+  success: boolean;
+  data: {
+    questions: Question[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalQuestions: number;
+      questionsPerPage: number;
+    };
+  };
 }
 
 export interface QuizSection {
@@ -128,6 +136,12 @@ export interface PaginationData {
   totalQuestions: number;
   questionsPerPage: number;
 }
+
+// Import tag types
+import { TagSystem, Tags, TagHierarchy, TagUploadResponse } from './tagTypes';
+
+// Re-export tag types
+export { TagSystem, Tags, TagHierarchy, TagUploadResponse };
 
 export interface ApiResponse {
   success: boolean;

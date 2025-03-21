@@ -1,11 +1,20 @@
-import React, { useState, useEffect,  } from "react";
-import { Quiz, Question, TagSystem, QuizSection } from "../../../types/types";
+import React, { useState, useEffect } from "react";
+import { Quiz, Question, TagSystem } from "../../../types/types";
 import { QuizSectionBuilder } from "./QuizSectionBuid";
 import { QuizGeneratorWizard } from "./QuizGeneratorWizard";
 import { QuizPreview } from "../QuizPreview/QuizPreview";
 import { Modal } from "./Modal";
 import { toast } from "react-hot-toast";
 import { ErrorBoundary } from "react-error-boundary";
+import { quizService } from "../../../services/quizService";
+import { tagService } from "../../../services/tagService";
+import { questionService } from "../../../services/questionService";
+import { HeaderSection } from "./components/HeaderSection/HeaderSection";
+import { useQuizBuilder } from "./hooks/useQuizBuilder";
+import { InstructionSection } from "./components/InstructionSection/InstructionSection";
+import { FooterSection } from "./components/FooterSection/FooterSection";
+import { WatermarkSettings } from "./components/WatermarkSettings/WatermarkSettings";
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface QuizBuilderProps {
   questions: Question[];
@@ -16,192 +25,157 @@ interface QuizBuilderProps {
 }
 
 export const QuizBuilder: React.FC<QuizBuilderProps> = ({
-  questions,
-  tagSystem,
+  questions: initialQuestions,
+  tagSystem: initialTagSystem,
   onSave,
   initialQuiz,
   quizzes,
 }) => {
-  // Helper to get used questions across all sections except the current section
-  const getUsedQuestions = (currentSectionId: string) => {
-    const usedQuestionIds = new Set<string>();
+  const { user } = useAuth();
+  const {
+    quiz,
+    setQuiz,
+    newHeader,
+    setNewHeader,
+    newInstruction,
+    setNewInstruction,
+    newFooter,
+    setNewFooter
+  } = useQuizBuilder(initialQuiz);
 
-    // Get all questions used in other sections of this quiz
-    quiz.sections.forEach((section) => {
-      if (section.id !== currentSectionId) {
-        section.questions.forEach((question) => {
-          usedQuestionIds.add(question.id);
+  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  
+  const [tagSystem, setTagSystem] = useState<TagSystem>(initialTagSystem || {
+    exam_types: [],
+    subjects: [],
+    topics: [],
+    difficulties: [],
+    question_types: []
+  });
+  
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [showGeneratorWizard, setShowGeneratorWizard] = useState<boolean>(false);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
+
+  // Remove duplicate quiz state declaration
+  // const [quiz, setQuiz] = useState<Quiz>( ... );
+
+
+  // Add helper function to get available questions
+  const getAvailableQuestions = (sectionId: string) => {
+    if (!quiz?.sections) return [];
+    
+    return questions.filter(question => {
+      // Check if question is used in any section except the current one
+      return !quiz.sections.some(section => 
+        section.id !== sectionId && 
+        section.questions.some(q => q.id === question.id)
+      );
+    });
+  };
+
+
+ 
+
+  // Add useEffect to fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setLoadingError(null);
+      
+      try {
+        // Fetch tag system with error handling
+        const tagsResponse = await tagService.getAllTags();
+       
+        setTagSystem({
+          ...(tagSystem || {}),
+          ...tagsResponse
         });
+
+        // Fetch questions
+        const questionsResponse = await questionService.fetchQuestions({
+          page: 1,
+          limit: 1000,
+          filters: {},
+          searchQuery: ''
+        });
+        setQuestions(questionsResponse.data.questions);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoadingError('Failed to fetch data from server');
+        toast.error('Failed to fetch data from server');
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    fetchData();
+  }, []);
+
+  // Update handleSave to use backend service
+  // Remove the first handleSave declaration and keep the more complete one
+  const handleSave = async () => {
+  // Validate title
+  if (!quiz.title || quiz.title.trim() === "") {
+    toast.error("Please enter a quiz title");
+    return;
+  }
+
+  // Validate sections
+  if (quiz.sections.length === 0) {
+    toast.error("Please add at least one section");
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    const updatedQuiz = {
+      ...quiz,
+      createdBy: user?.id || '', // Use authenticated user's ID
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save quiz to backend
+    const response = !quiz.title 
+      ? await quizService.updateQuiz(quiz.id, updatedQuiz)
+      : await quizService.createQuiz(updatedQuiz);
+    
+    // Update questions with quiz usage
+    const updatedQuestions = questions.map((q) => {
+      const isUsedInThisQuiz = quiz.sections.some((section) =>
+        section.questions.some((sq) => sq.id === q.id)
+      );
+
+      if (isUsedInThisQuiz) {
+        const usedInQuizzes = new Set(q.usedInQuizzes || []);
+        usedInQuizzes.add(quiz.id);
+        return {
+          ...q,
+          usedInQuizzes: Array.from(usedInQuizzes),
+        };
+      }
+      return q;
     });
 
-    return usedQuestionIds;
-  };
-
-  // Filter available questions for the QuizSectionBuilder
-  const getAvailableQuestions = (currentSectionId: string) => {
-    const usedQuestions = getUsedQuestions(currentSectionId);
-    // Return only questions that haven't been used in other sections
-    return questions.filter((question) => !usedQuestions.has(question.id));
-  };
-
-  const [quiz, setQuiz] = useState<Quiz>(
-    () =>
-      initialQuiz || {
-        id: crypto.randomUUID(),
-        title: "",
-        header: [],
-        instructions: [],
-        footer: [],
-        sections: [],
-        total_duration: 0,  // changed from totalDuration
-        total_marks: 0,     // changed from totalMarks
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        watermark: {
-          enabled: true,
-          text: "PROF. P.C. THOMAS & CHAITHANYA CLASSES",
-        },
-      }
-  );
-
-  const [newHeader, setNewHeader] = useState("");
-  const [newInstruction, setNewInstruction] = useState("");
-  const [newFooter, setNewFooter] = useState("");
-  const [showGeneratorWizard, setShowGeneratorWizard] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  // const [newSection, setNewSection] = useState<QuizSection | null>(null);
-  // const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
-
-
-  // Calculate totals whenever sections change
-  useEffect(() => {
-    const totalMarks = quiz.sections.reduce(
-      (sum, section) => sum + section.marks * section.questions.length,
-      0
-    );
-
-    // Only update marks, not duration
-    if (totalMarks !== quiz.total_marks) {
-      setQuiz((prev) => ({
-        ...prev,
-        total_marks: totalMarks,
-        updatedAt: new Date().toISOString(),
-      }));
-    }
-  }, [
-    quiz.sections.map((section) => ({
-      marks: section.marks,
-      questionCount: section.questions.length,
-    })),
-  ]);
-
-  const handleAddHeader = () => {
-    if (newHeader.trim()) {
-      setQuiz((prev) => ({
-        ...prev,
-        header: [...(prev.header || []), newHeader.trim()],
-      }));
-      setNewHeader("");
-    }
-  };
-
-  const handleRemoveHeader = (index: number) => {
-    setQuiz((prev) => ({
-      ...prev,
-      header: prev.header?.filter((_, i) => i !== index) || [],
-    }));
-  };
-
-  const handleAddInstruction = () => {
-    if (newInstruction.trim()) {
-      setQuiz((prev) => ({
-        ...prev,
-        instructions: [...(prev.instructions || []), newInstruction.trim()],
-      }));
-      setNewInstruction("");
-    }
-  };
-
-  const handleRemoveInstruction = (index: number) => {
-    setQuiz((prev) => ({
-      ...prev,
-      instructions: prev.instructions?.filter((_, i) => i !== index) || [],
-    }));
-  };
-
-  const handleAddFooter = () => {
-    if (newFooter.trim()) {
-      setQuiz((prev) => ({
-        ...prev,
-        footer: [...(prev.footer || []), newFooter.trim()],
-      }));
-      setNewFooter("");
-    }
-  };
-
-  const handleRemoveFooter = (index: number) => {
-    setQuiz((prev) => ({
-      ...prev,
-      footer: prev.footer?.filter((_, i) => i !== index) || [],
-    }));
-  };
-
-  const handleGeneratedSections = (sections: QuizSection[]) => {
-    setQuiz((prev) => ({
-      ...prev,
-      sections: [...prev.sections, ...sections],
-    }));
-    setShowGeneratorWizard(false);
-  };
-
-  const handleSave = async () => {
-    // Validate title
-    if (!quiz.title || quiz.title.trim() === "") {
-      toast.error("Please enter a quiz title");
-      return;
-    }
-
-    // Validate sections
-    if (quiz.sections.length === 0) {
-      toast.error("Please add at least one section");
-      return;
-    }
-
-    setIsSaving(true);
+    // Update questions in backend with error handling
     try {
-      const updatedQuiz = {
-        ...quiz,
-        updatedAt: new Date().toISOString(),
-      };
-
-      // Update questions to track quiz usage
-      const updatedQuestions = questions.map((q) => {
-        const isUsedInThisQuiz = quiz.sections.some((section) =>
-          section.questions.some((sq) => sq.id === q.id)
-        );
-
-        if (isUsedInThisQuiz) {
-          const usedInQuizzes = new Set(q.usedInQuizzes || []);
-          usedInQuizzes.add(quiz.id);
-          return {
-            ...q,
-            usedInQuizzes: Array.from(usedInQuizzes),
-          };
-        }
-        return q;
-      });
-
-      await onSave(updatedQuiz, updatedQuestions);
-      toast.success("Quiz saved successfully!");
+      await questionService.bulkUpdateQuestions(updatedQuestions);
     } catch (error) {
-      toast.error("Failed to save quiz");
-      console.error("Save error:", error);
-    } finally {
-      setIsSaving(false);
+      console.error("Failed to update questions:", error);
+      toast.error("Quiz saved but question updates failed");
     }
-  };
+
+    toast.success("Quiz saved successfully!");
+    onSave(response.data, updatedQuestions);
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error("Failed to save quiz");
+  } finally {
+    setIsSaving(false);
+  }
+};
   // // Function to handle adding a new section
   // const handleAddSection = (section: QuizSection) => {
   //   setQuiz((prev) => ({
@@ -211,85 +185,75 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
   //   setIsAddSectionModalOpen(false); // Close the modal
   // };
 
+  // Add the missing function declaration
+  const handleGeneratedSections = (sections: any[]) => {
+    setQuiz(prev => ({
+      ...prev,
+      sections: [
+        ...prev.sections,
+        ...sections
+      ]
+    }));
+    setShowGeneratorWizard(false);
+  };
+
+  // Add the missing function declaration
+  const getUsedQuestions = (sectionId: string) => {
+    return new Set(
+      quiz.sections
+        .filter(section => section.id !== sectionId)
+        .flatMap(section => section.questions.map(q => q.id))
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="space-y-6">
         {/* Title */}
         <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
             Quiz Title
           </label>
           <input
             type="text"
             id="title"
             value={quiz.title}
-            onChange={(e) =>
-              setQuiz((prev) => ({ ...prev, title: e.target.value }))
-            }
+            onChange={(e) => setQuiz(prev => ({ ...prev, title: e.target.value }))}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
 
-        {/* Header */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Header Notes (Optional)
-          </label>
-          <div className="space-y-2">
-            {quiz.header?.map((headerItem, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="text-sm">{index + 1}.</span>
-                <span className="flex-1">{headerItem}</span>
-                <button
-                  onClick={() => handleRemoveHeader(index)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newHeader}
-                onChange={(e) => setNewHeader(e.target.value)}
-                placeholder="Add a header note..."
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddHeader();
-                  }
-                }}
-              />
-              <button
-                onClick={handleAddHeader}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
+        <HeaderSection
+          headerItems={quiz.header}
+          newHeader={newHeader}
+          onAddHeader={(header) => {
+            if (header.trim()) {
+              setQuiz(prev => ({ ...prev, header: [...prev.header, header] }));
+              setNewHeader("");
+            }
+          }}
+          onRemoveHeader={(index) => {
+            setQuiz(prev => ({
+              ...prev,
+              header: prev.header.filter((_, i) => i !== index)
+            }));
+          }}
+          onHeaderChange={setNewHeader}
+        />
 
         {/* Duration */}
         <div>
-          <label
-            htmlFor="duration"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
             Total Duration (minutes)
           </label>
           <input
             type="number"
             id="duration"
-            value={quiz.total_duration}  // changed from totalDuration
+            value={quiz.total_duration}
             onChange={(e) =>
-              setQuiz((prev) => ({
+              setQuiz(prev => ({
                 ...prev,
-                total_duration: parseInt(e.target.value) || 0,  // changed from totalDuration
+                total_duration: parseInt(e.target.value) || 0,
               }))
             }
             min="0"
@@ -298,137 +262,53 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
         </div>
 
         {/* Instructions */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Instructions (Optional)
-          </label>
-          <div className="space-y-2">
-            {quiz.instructions?.map((instruction, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="text-sm">{index + 1}.</span>
-                <span className="flex-1">{instruction}</span>
-                <button
-                  onClick={() => handleRemoveInstruction(index)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newInstruction}
-                onChange={(e) => setNewInstruction(e.target.value)}
-                placeholder="Add an instruction..."
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddInstruction();
-                  }
-                }}
-              />
-              <button
-                onClick={handleAddInstruction}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
+        <InstructionSection
+          instructions={quiz.instructions}
+          newInstruction={newInstruction}
+          onAddInstruction={(instruction) => {
+            if (instruction.trim()) {
+              setQuiz(prev => ({ ...prev, instructions: [...prev.instructions, instruction] }));
+              setNewInstruction("");
+            }
+          }}
+          onRemoveInstruction={(index) => {
+            setQuiz(prev => ({
+              ...prev,
+              instructions: prev.instructions.filter((_, i) => i !== index)
+            }));
+          }}
+          onInstructionChange={setNewInstruction}
+        />
 
         {/* Footer */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Footer Notes (Optional)
-          </label>
-          <div className="space-y-2">
-            {quiz.footer?.map((footerItem, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="text-sm">{index + 1}.</span>
-                <span className="flex-1">{footerItem}</span>
-                <button
-                  onClick={() => handleRemoveFooter(index)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newFooter}
-                onChange={(e) => setNewFooter(e.target.value)}
-                placeholder="Add a footer note..."
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    handleAddFooter();
-                  }
-                }}
-              />
-              <button
-                onClick={handleAddFooter}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
+        <FooterSection
+          footerItems={quiz.footer}
+          newFooter={newFooter}
+          onAddFooter={(footer) => {
+            if (footer.trim()) {
+              setQuiz(prev => ({ ...prev, footer: [...prev.footer, footer] }));
+              setNewFooter("");
+            }
+          }}
+          onRemoveFooter={(index) => {
+            setQuiz(prev => ({
+              ...prev,
+              footer: prev.footer.filter((_, i) => i !== index)
+            }));
+          }}
+          onFooterChange={setNewFooter}
+        />
 
         {/* Watermark Settings */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Watermark Settings
-          </label>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="watermarkEnabled"
-                checked={quiz.watermark?.enabled}
-                onChange={(e) =>
-                  setQuiz((prev) => ({
-                    ...prev,
-                    watermark: {
-                      ...prev.watermark,
-                      enabled: e.target.checked,
-                    },
-                  }))
-                }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label
-                htmlFor="watermarkEnabled"
-                className="ml-2 text-sm text-gray-700"
-              >
-                Enable Watermark
-              </label>
-            </div>
-            {quiz.watermark?.enabled && (
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={quiz.watermark?.text || ""}
-                  onChange={(e) =>
-                    setQuiz((prev) => ({
-                      ...prev,
-                      watermark: {
-                        ...prev.watermark,
-                        text: e.target.value,
-                      },
-                    }))
-                  }
-                  placeholder="Enter watermark text..."
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                />
-              </div>
-            )}
-          </div>
-        </div>
+        <WatermarkSettings
+          watermark={quiz.watermark}
+          onWatermarkChange={(watermark) => {
+            setQuiz(prev => ({
+              ...prev,
+              watermark
+            }));
+          }}
+        />
 
         {/* Sections */}
         <div className="space-y-4">
@@ -463,39 +343,11 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
               >
                 Add Section
               </button>
-              {/* Add Section Button
-              <button
-                onClick={() => {
-                  setNewSection({
-                    id: crypto.randomUUID(),
-                    name: `Section ${quiz.sections.length + 1}`,
-                    timerEnabled: false,
-                    marks: 1,
-                    negativeMarks: 0,
-                    questions: [],
-                  });
-                  setIsAddSectionModalOpen(true);
-                }}
-                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
-              >
-                Add Section
-              </button> */}
+             
             </div>
           </div>
 
-          {/* Modal for Adding a New Section
-          { newSection && (
-            <QuizSectionBuilder
-              section={newSection}
-              questions={getAvailableQuestions(newSection.id)}
-              tagSystem={tagSystem}
-              usedQuestions={getUsedQuestions(newSection.id)}
-              onChange={(updatedSection) => {
-                handleAddSection(updatedSection);
-              }}
-              onDelete={() => setIsAddSectionModalOpen(false)} // Close modal on delete
-            />
-          )} */}
+        
 
           {quiz.sections.map((section, index) => (
             <QuizSectionBuilder
@@ -590,3 +442,9 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     </div>
   );
 };
+
+
+
+
+
+
