@@ -10,6 +10,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Dashboard from "./pages/QuizDashboard";
 import StudentAnalyticsDashboard from "./pages/student-analytics-dashboard";
+import QuizReportPage from "./pages/QuizReportPage"; // We'll create this page
+
 
 function App() {
   return (
@@ -56,6 +58,16 @@ function App() {
                 </ProtectedRoute>
               }
             /> */}
+
+             {/* Quiz Report Route */}
+             <Route
+              path="/quiz-report/:quizId"
+              element={
+                <ProtectedRoute requiredRole={["Student", "Admin"]}>
+                  <QuizReportPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />

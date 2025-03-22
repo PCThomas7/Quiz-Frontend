@@ -75,11 +75,20 @@ export const quizService = {
   },
   
   // Quiz Attempt Operations
-  submitQuizAttempt: async (quizId, attemptData) => {
+  // Make sure the submitQuizAttempt function is properly implemented
+  // Update the submitQuizAttempt function to include userId
+  submitQuizAttempt: async (quizId: string, attemptData: any) => {
     try {
+      // Make sure userId is included in attemptData
+      if (!attemptData.userId) {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        attemptData.userId = userInfo.id || userInfo._id;
+      }
+      
       const response = await api.post(`/quizzes/${quizId}/attempts`, attemptData);
       return response.data;
     } catch (error) {
+      console.error("Error submitting quiz attempt:", error);
       throw new Error(error.response?.data?.message || 'Failed to submit quiz attempt');
     }
   },

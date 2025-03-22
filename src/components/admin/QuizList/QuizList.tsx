@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Quiz } from '../../../types/types';
 import { PrintView } from '../PrintView/PrintView';
 import { quizService } from '../../../services/quizService';
+import { useNavigate } from 'react-router-dom';
+
 import './QuizList.css';
 
 interface QuizListProps {
@@ -19,6 +21,7 @@ export function QuizList({
   onTakeQuiz,
   onCreateQuiz
 }: QuizListProps) {
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +117,11 @@ useEffect(() => {
         alert('Failed to delete quiz. Please try again.');
       }
     }
+  };
+
+  // Add a function to navigate to the quiz report
+  const handleViewReport = (quizId: string) => {
+    navigate(`/quiz-report/${quizId}`);
   };
 
   if (showPrintView && selectedQuizForPrint) {
@@ -241,6 +249,12 @@ useEffect(() => {
                                 className="text-green-600 hover:text-green-900"
                               >
                                 Take Quiz
+                              </button>
+                              <button
+                                onClick={() => handleViewReport(quiz.id)}
+                                className="text-orange-600 hover:text-orange-900"
+                              >
+                                View Report
                               </button>
                               <button
                                 onClick={() => onEditQuiz(quiz)}
