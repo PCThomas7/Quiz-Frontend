@@ -59,7 +59,7 @@ export function QuizView({
 }: QuizViewProps) {
   const section = quiz.sections[currentSection];
   const question = section.questions[currentQuestion];
-  const status = questionStatus[question.id];
+  const status = questionStatus[question._id];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,7 +169,7 @@ export function QuizView({
                   <Options
                     question={question}
                     selectedAnswers={status.selectedAnswers}
-                    onAnswerChange={(answers) => handleAnswerChange(question.id, answers)} // Ensure this line uses handleAnswerChange
+                    onAnswerChange={(answers) => handleAnswerChange(question._id, answers)} // Ensure this line uses handleAnswerChange
                   />
                 </div>
 
@@ -187,13 +187,13 @@ export function QuizView({
           <div className="flex justify-between mt-6">
             <div className="space-x-4">
               <button
-                onClick={() => handleClearResponse(question.id)}
+                onClick={() => handleClearResponse(question._id)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
               >
                 Clear Response
               </button>
               <button
-                onClick={() => handleMarkForReview(question.id)}
+                onClick={() => handleMarkForReview(question._id)}
                 className="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded hover:bg-purple-200"
               >
                 {status?.markedForReview
@@ -290,7 +290,7 @@ export function QuizView({
             </div>
             <div className="grid grid-cols-4 gap-2">
               {quiz.sections[currentSection].questions.map((q, qIndex) => {
-                const qStatus = questionStatus[q.id];
+                const qStatus = questionStatus[q._id];
                 const questionNum = getQuestionNumber(currentSection, qIndex);
                 let statusImage = Logo1;
                 let textColor = "text-black";
@@ -311,9 +311,9 @@ export function QuizView({
 
                 return (
                   <button
-                    key={q.id}
+                    key={q._id}
                     onClick={() =>
-                      handleJumpToQuestion(currentSection, qIndex, q.id)
+                      handleJumpToQuestion(currentSection, qIndex, q._id)
                     }
                     className={`p-2 rounded relative ${
                       currentSection === currentSection &&

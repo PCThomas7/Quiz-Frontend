@@ -35,7 +35,7 @@ export const QuestionCreator: React.FC<QuestionCreatorProps> = ({
   const [previewMode, setPreviewMode] = useState(false);
   const { register, handleSubmit, watch, setValue,  } = useForm<Question>({
     defaultValues: initialQuestion || {
-      id: crypto.randomUUID(),
+      _id: crypto.randomUUID(),
       question_text: '',
       option_a: '',
       option_b: '',
@@ -80,7 +80,7 @@ export const QuestionCreator: React.FC<QuestionCreatorProps> = ({
     if (questionText.length > 10) { // Only check if enough text is entered
       const similar = findSimilarQuestions(
         questionText,
-        questions.filter(q => q.id !== initialQuestion?.id), // Exclude current question when editing
+        questions.filter(q => q._id !== initialQuestion?._id), // Exclude current question when editing
         SIMILARITY_THRESHOLDS.MEDIUM // Show anything above medium similarity
       );
       setSimilarQuestions(similar);
@@ -190,7 +190,7 @@ export const QuestionCreator: React.FC<QuestionCreatorProps> = ({
               <div className="mt-2 space-y-4">
                 {similarQuestions.map(({ question, similarity, matchedText }) => (
                   <div 
-                    key={question.id} 
+                    key={question._id} 
                     className={`text-sm p-3 rounded-md ${
                       similarity > SIMILARITY_THRESHOLDS.HIGH
                         ? 'bg-red-50 border border-red-200'

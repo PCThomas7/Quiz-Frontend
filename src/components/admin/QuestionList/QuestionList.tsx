@@ -325,7 +325,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 checked={selectedQuestionIds.size === questions.length && questions.length > 0}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setSelectedQuestionIds(new Set(questions.map(q => q.id)));
+                    setSelectedQuestionIds(new Set(questions.map(q => q._id)));
                   } else {
                     setSelectedQuestionIds(new Set());
                   }
@@ -340,18 +340,18 @@ export const QuestionList: React.FC<QuestionListProps> = ({
 
           {/* Questions */}
           {!loading && questions.map((question) => (
-            <div key={question.id} className="bg-white shadow-sm rounded-lg p-6">
+            <div key={question._id} className="bg-white shadow-sm rounded-lg p-6">
               <div className="flex justify-between items-start">
                 <div className="flex items-start space-x-4">
                   <input
                     type="checkbox"
-                    checked={selectedQuestionIds.has(question.id)}
+                    checked={selectedQuestionIds.has(question._id)}
                     onChange={(e) => {
                       const newSelected = new Set(selectedQuestionIds);
                       if (e.target.checked) {
-                        newSelected.add(question.id);
+                        newSelected.add(question._id);
                       } else {
-                        newSelected.delete(question.id);
+                        newSelected.delete(question._id);
                       }
                       setSelectedQuestionIds(newSelected);
                     }}
@@ -379,7 +379,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteQuestion(question.id)}
+                    onClick={() => handleDeleteQuestion(question._id)}
                     className="text-red-600 hover:text-red-800"
                   >
                     Delete
@@ -391,18 +391,18 @@ export const QuestionList: React.FC<QuestionListProps> = ({
               <button
                 onClick={() =>
                   setExpandedQuestionId(
-                    expandedQuestionId === question.id ? null : question.id
+                    expandedQuestionId === question._id ? null : question._id
                   )
                 }
                 className="mt-4 text-sm text-blue-600 hover:text-blue-800"
               >
-                {expandedQuestionId === question.id
+                {expandedQuestionId === question._id
                   ? "Hide Details"
                   : "Show Details"}
               </button>
 
               {/* Expanded question details */}
-              {expandedQuestionId === question.id && (
+              {expandedQuestionId === question._id && (
                 <div className="mt-4 space-y-4">
                   {question.tags.question_type !== "Numeric" && (
                     <div className="grid grid-cols-2 gap-4">

@@ -91,7 +91,7 @@ export const QuizSectionBuilder: React.FC<QuizSectionBuilderProps> = ({
 
       // Compare current and new questions to prevent unnecessary updates
       const currentQuestionIds = section.questions
-        .map((q) => q.id)
+        .map((q) => q._id)
         .sort()
         .join(",");
       const newQuestionIds = generatedQuestions

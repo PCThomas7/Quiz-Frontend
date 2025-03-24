@@ -36,11 +36,11 @@ export default function Dashboard() {
   };
 
   const handleUpdateQuestion = (question: Question) => {
-    setQuestions(prev => prev.map(q => q.id === question.id ? question : q));
+    setQuestions(prev => prev.map(q => q._id === question._id ? question : q));
   };
 
   const handleDeleteQuestion = (questionId: string) => {
-    setQuestions(prev => prev.filter(q => q.id !== questionId));
+    setQuestions(prev => prev.filter(q => q._id !== questionId));
   };
 
   const handleBulkUpload = (newQuestions: Question[]) => {

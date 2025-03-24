@@ -29,10 +29,10 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
   const [selectedQuestionsInternal, setSelectedQuestionsInternal] = useState<Question[]>(initialSelectedQuestions);
 
   const handleQuestionToggle = (question: Question) => {
-    const isSelected = selectedQuestionsInternal.some(q => q.id === question.id);
+    const isSelected = selectedQuestionsInternal.some(q => q._id === question._id);
     
     if (isSelected) {
-      const newSelected = selectedQuestionsInternal.filter(q => q.id !== question.id);
+      const newSelected = selectedQuestionsInternal.filter(q => q._id !== question._id);
       setSelectedQuestionsInternal(newSelected);
       onSelect(newSelected);
     } else {
@@ -150,8 +150,8 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
 
   const handleReplaceQuestion = (newQuestionId: string) => {
     const newSelectedQuestions = selectedQuestionsInternal.map((q) =>
-      q.id === replacingQuestionId
-        ? questions.find((question) => question.id === newQuestionId)!
+      q._id === replacingQuestionId
+        ? questions.find((question) => question._id === newQuestionId)!
         : q
     );
     setSelectedQuestionsInternal(newSelectedQuestions);
@@ -177,7 +177,7 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
     // Use the questionTags parameter directly instead of undefined 'tags'
     if (!questionTags) return null;
     
-    const usedInQuizzes = getQuizUsage(question.id);
+    const usedInQuizzes = getQuizUsage(question._id);
     
     return (
       <div className="flex flex-wrap gap-2 mt-2">
@@ -250,18 +250,18 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
 
         {/* Questions */}
         {filteredQuestions
-          .filter((question) => selectedQuestionsInternal.some((q) => q.id === question.id))
+          .filter((question) => selectedQuestionsInternal.some((q) => q._id === question._id))
           .slice(
             (currentPage - 1) * questionsPerPage,
             currentPage * questionsPerPage
           )
           .map((question) => {
             const isSelected = selectedQuestionsInternal.some(
-              (q) => q.id === question.id
+              (q) => q._id === question._id
             );
             return (
               <div
-                key={question.id}
+                key={question._id}
                 className={`bg-white shadow-sm rounded-lg p-6 border-2 ${
                   isSelected ? "border-blue-500" : "border-transparent"
                 }`}
@@ -291,7 +291,7 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
                     {isSelected && (
                       <button
                         onClick={() => {
-                          setReplacingQuestionId(question.id);
+                          setReplacingQuestionId(question._id);
                           setIsReplaceModalOpen(true);
                         }}
                         className="px-3 py-1 rounded-md text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
@@ -302,21 +302,21 @@ export const QuizSelector: React.FC<QuizSelectorProps> = ({
                     <button
                       onClick={() =>
                         setExpandedQuestionId(
-                          expandedQuestionId === question.id
+                          expandedQuestionId === question._id
                             ? null
-                            : question.id
+                            : question._id
                         )
                       }
                       className="text-blue-600 hover:text-blue-800"
                     >
-                      {expandedQuestionId === question.id
+                      {expandedQuestionId === question._id
                         ? "Hide Details"
                         : "Show Details"}
                     </button>
                   </div>
                 </div>
 
-                {isSelected && expandedQuestionId === question.id && (
+                {isSelected && expandedQuestionId === question._id && (
                   <div className="mt-4 space-y-4">
                     {question.tags.question_type !== "Numeric" && (
                       <div className="grid grid-cols-2 gap-4">

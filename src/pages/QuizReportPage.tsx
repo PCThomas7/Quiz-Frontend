@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Quiz } from "../types/types";
+import { Quiz, QuizAttempt } from "../types/types"; // Add QuizAttempt type
 import { QuizReport } from "../components/admin/QuizReport/QuizReport";
 import { quizService } from "../services/quizService";
 import { useAuth } from "../contexts/AuthContext";
@@ -11,7 +11,7 @@ const QuizReportPage: React.FC = () => {
   const { user } = useAuth();
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [userAnswers, setUserAnswers] = useState<Record<string, string[]>>({});
+  const [attempt, setAttempt] = useState<QuizAttempt | null>(null); // New state for attempt
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +28,7 @@ const QuizReportPage: React.FC = () => {
         
         // Fetch the quiz data
         const quizData = await quizService.getQuiz(quizId);
-        setQuiz(quizData);
+        setQuiz(quizData.quiz); // Access quiz from response data
         
         // Fetch the user's most recent attempt for this quiz
         const attemptsData = await quizService.getUserQuizAttempts(quizId);
@@ -39,8 +39,7 @@ const QuizReportPage: React.FC = () => {
             (a: any, b: any) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
           )[0];
           
-          // Set the user's answers from the attempt
-          setUserAnswers(latestAttempt.answers || {});
+          setAttempt(latestAttempt);
         } else {
           setError("No quiz attempts found");
         }
@@ -98,7 +97,7 @@ const QuizReportPage: React.FC = () => {
   return (
     <QuizReport
       quiz={quiz}
-      userAnswers={userAnswers}
+      attempt={attempt} // Pass the complete attempt object
       onRetake={handleRetakeQuiz}
       onBackToDashboard={handleBackToDashboard}
     />

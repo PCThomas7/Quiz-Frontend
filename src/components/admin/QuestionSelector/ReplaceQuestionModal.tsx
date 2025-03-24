@@ -81,7 +81,7 @@ export const ReplaceQuestionModal: React.FC<ReplaceQuestionModalProps> = ({
         <div className="space-y-4">
           {filteredQuestions.map((question) => (
             <div
-              key={question.id}
+              key={question._id}
               className="bg-white shadow-sm rounded-lg p-6 border border-gray-200"
             >
               <div className="flex justify-between items-start">
@@ -99,7 +99,7 @@ export const ReplaceQuestionModal: React.FC<ReplaceQuestionModalProps> = ({
                 </div>
                 <button
                   onClick={() => {
-                    onReplace(question.id);
+                    onReplace(question._id);
                     onClose();
                   }}
                   className="px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"

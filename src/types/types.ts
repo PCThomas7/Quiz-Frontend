@@ -14,7 +14,7 @@ export interface QuestionTags {
 
 export interface Question {
   _id: string;
-  id: string;
+  _id: string;
   question_text: string;
   option_a: string;
   option_b: string;
@@ -151,4 +151,19 @@ export interface ApiResponse {
   };
   error?: string;
   message?: string;
+}
+
+export interface QuizAttempt {
+  _id: string;
+  quiz: string;
+  user: string;
+  answers: Record<string, string[]>;
+  score: number;
+  maxScore: number;
+  timeSpent: number;
+  completed: boolean;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  unattemptedAnswers: number;
+  submittedAt: Date;
 }

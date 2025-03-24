@@ -22,7 +22,7 @@ export function Options({ question, selectedAnswers, onAnswerChange }: OptionsPr
         <div key={option.id} className="flex items-start gap-3">
           <input
             type={question.tags.question_type === "MMCQ" ? "checkbox" : "radio"}
-            name={`question-${question.id}`}
+            name={`question-${question._id}`}
             value={option.id}
             checked={selectedAnswers.includes(option.id)}
             onChange={(e) => {

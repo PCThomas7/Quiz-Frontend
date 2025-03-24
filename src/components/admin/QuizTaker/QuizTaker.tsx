@@ -93,7 +93,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     const initialStatus: Record<string, QuestionStatus> = {};
     quiz.sections.forEach((section) => {
       section.questions.forEach((question) => {
-        initialStatus[question.id] = {
+        initialStatus[question._id] = {
           visited: false,
           answered: false,
           markedForReview: false,
@@ -105,7 +105,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     setTempAnswers({});
 
     if (quiz.sections[0]?.questions[0]) {
-      const firstQuestionId = quiz.sections[0].questions[0].id;
+      const firstQuestionId = quiz.sections[0].questions[0]._id;
       setQuestionStatus((prev) => ({
         ...prev,
         [firstQuestionId]: {
@@ -119,7 +119,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
   // Navigation handlers
   const handleNext = useCallback(() => {
     const currentSectionQuestions = quiz.sections[currentSection].questions;
-    const currentQuestionId = currentSectionQuestions[currentQuestion].id;
+    const currentQuestionId = currentSectionQuestions[currentQuestion]._id;
 
     // Save the answer when clicking "Save & Next"
     if (tempAnswers[currentQuestionId]) {
@@ -139,7 +139,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     }
 
     if (currentQuestion < currentSectionQuestions.length - 1) {
-      const nextQuestionId = currentSectionQuestions[currentQuestion + 1].id;
+      const nextQuestionId = currentSectionQuestions[currentQuestion + 1]._id;
       setQuestionStatus((prev) => ({
         ...prev,
         [nextQuestionId]: {
@@ -150,7 +150,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
       setCurrentQuestion((prev) => prev + 1);
     } else if (currentSection < quiz.sections.length - 1) {
       const nextSectionFirstQuestionId =
-        quiz.sections[currentSection + 1].questions[0].id;
+        quiz.sections[currentSection + 1].questions[0]._id;
       setQuestionStatus((prev) => ({
         ...prev,
         [nextSectionFirstQuestionId]: {
@@ -342,7 +342,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     return quiz.sections.reduce(
       (counts, section) => {
         section.questions.forEach((question) => {
-          const status = questionStatus[question.id];
+          const status = questionStatus[question._id];
           if (!status?.visited) counts.notVisited++;
           else if (status.markedForReview && status.answered)
             counts.answeredAndMarked++;
@@ -377,15 +377,15 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
   );
 
   const renderOptions = (question: Question) => {
-    const status = questionStatus[question.id];
-    const tempAnswer = tempAnswers[question.id];
+    const status = questionStatus[question._id];
+    const tempAnswer = tempAnswers[question._id];
     const selectedAnswers = tempAnswer || status?.selectedAnswers || [];
 
     return (
       <Options
         question={question}
         selectedAnswers={selectedAnswers}
-        onAnswerChange={(answers) => handleAnswerChange(question.id, answers)}
+        onAnswerChange={(answers) => handleAnswerChange(question._id, answers)}
       />
     );
   };
@@ -393,7 +393,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
   const renderQuiz = () => {
     const section = quiz.sections[currentSection];
     const question = section.questions[currentQuestion];
-    const status = questionStatus[question.id];
+    const status = questionStatus[question._id];
     const statusCounts = getStatusCounts();
 
     return (
@@ -520,13 +520,13 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
             <div className="flex justify-between mt-6">
               <div className="space-x-4">
                 <button
-                  onClick={() => handleClearResponse(question.id)}
+                  onClick={() => handleClearResponse(question._id)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
                 >
                   Clear Response
                 </button>
                 <button
-                  onClick={() => handleMarkForReview(question.id)}
+                  onClick={() => handleMarkForReview(question._id)}
                   className="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded hover:bg-purple-200"
                 >
                   {status?.markedForReview
@@ -623,7 +623,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {quiz.sections[currentSection].questions.map((q, qIndex) => {
-                  const qStatus = questionStatus[q.id];
+                  const qStatus = questionStatus[q._id];
                   // Calculate the continuous question number
                   const questionNum = getQuestionNumber(currentSection, qIndex);
                   let statusImage = Logo1; // Not Visited
@@ -645,9 +645,9 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
 
                   return (
                     <button
-                      key={q.id}
+                      key={q._id}
                       onClick={() =>
-                        handleJumpToQuestion(currentSection, qIndex, q.id)
+                        handleJumpToQuestion(currentSection, qIndex, q._id)
                       }
                       className={`p-2 rounded relative ${
                         currentSection === currentSection &&

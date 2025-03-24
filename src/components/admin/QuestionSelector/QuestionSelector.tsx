@@ -105,10 +105,10 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
   };
 
   const handleQuestionToggle = (question: Question) => {
-    const isSelected = selectedQuestionsToSave.some(q => q.id === question.id);
+    const isSelected = selectedQuestionsToSave.some(q => q._id === question._id);
     
     if (isSelected) {
-        setSelectedQuestionsToSave(selectedQuestionsToSave.filter(q => q.id !== question.id));
+        setSelectedQuestionsToSave(selectedQuestionsToSave.filter(q => q._id !== question._id));
         onSelect(selectedQuestionsToSave);
     } else {
       if (maxSelect && selectedQuestionsToSave.length >= maxSelect) {
@@ -138,7 +138,7 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
 
   const handleReplaceQuestion = (newQuestionId: string) => {
     const newSelectedQuestions = selectedQuestions.map((q) =>
-      q.id === replacingQuestionId ? questions.find((question) => question.id === newQuestionId)! : q
+      q._id === replacingQuestionId ? questions.find((question) => question._id === newQuestionId)! : q
     );
     onSelect(newSelectedQuestions);
     setReplacingQuestionId(null);
@@ -148,7 +148,7 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
   const getQuizUsage = (questionId: string) => {
     return quizzes?.filter(quiz =>
       quiz.sections?.some(section =>
-        section.questions?.some(q => q.id === questionId)
+        section.questions?.some(q => q._id === questionId)
       )
     );
   };
@@ -156,13 +156,13 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
   const isQuestionUsedInQuiz = (questionId: string) => {
     return quizzes?.some(quiz =>
       quiz.sections?.some(section =>
-        section.questions?.some(q => q.id === questionId)
+        section.questions?.some(q => q._id === questionId)
       )
     );
   };
 
   const renderTags = (tags: Tags, question: Question) => {
-    const usedInQuizzes = getQuizUsage(question.id);
+    const usedInQuizzes = getQuizUsage(question._id);
 
     return (
       <div className="flex flex-wrap gap-2 mt-2">
@@ -288,13 +288,13 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
 
         {/* Questions */}
         {filteredQuestions
-          .filter((question) => !selectedQuestions?.some((q) => q.id === question.id))
+          .filter((question) => !selectedQuestions?.some((q) => q._id === question._id))
           .slice((currentPage - 1) * questionsPerPage, currentPage * questionsPerPage)
           .map(question => {
-          const isSelected = selectedQuestionsToSave.some(q => q.id === question.id);
+          const isSelected = selectedQuestionsToSave.some(q => q._id === question._id);
           return (
             <div
-              key={question.id}
+              key={question._id}
               className={`bg-white shadow-sm rounded-lg p-6 border-2 ${
                 isSelected ? 'border-blue-500' : 'border-transparent'
               }`}
@@ -328,16 +328,16 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
                 
                   <button
                     onClick={() => setExpandedQuestionId(
-                      expandedQuestionId === question.id ? null : question.id
+                      expandedQuestionId === question._id ? null : question._id
                     )}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    {expandedQuestionId === question.id ? 'Hide Details' : 'Show Details'}
+                    {expandedQuestionId === question._id ? 'Hide Details' : 'Show Details'}
                   </button>
                 </div>
               </div>
 
-              {expandedQuestionId === question.id && (
+              {expandedQuestionId === question._id && (
                 <div className="mt-4 space-y-4">
                   {question.tags.question_type !== 'Numeric' && (
                     <div className="grid grid-cols-2 gap-4">

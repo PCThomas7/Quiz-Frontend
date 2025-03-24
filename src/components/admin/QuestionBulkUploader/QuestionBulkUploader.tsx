@@ -24,7 +24,7 @@ interface QuestionBulkUploaderProps {
 }
 
 const convertRowToQuestion = (row: any): Question => ({
-  id: crypto.randomUUID(),
+  _id: crypto.randomUUID(),
   question_text: row.question_text,
   option_a: row.option_a || '',
   option_b: row.option_b || '',

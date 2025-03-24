@@ -79,14 +79,14 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
           const topicQuestions = chapterQuestions
             .filter(q => q.tags.topic === topic.topic)
             .slice(0, topic.count);
-          topicQuestions.forEach(q => usedQuestionIds.add(q.id));
+          topicQuestions.forEach(q => usedQuestionIds.add(q._id));
         });
 
         // Add questions used directly in chapters (without topics)
         if (!chapter.topics.length) {
           chapterQuestions
             .slice(0, chapter.count)
-            .forEach(q => usedQuestionIds.add(q.id));
+            .forEach(q => usedQuestionIds.add(q._id));
         }
       });
     });
@@ -111,7 +111,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
           ).slice(0, topic.count);
           
           // Add to used questions
-          topicQuestions.forEach(q => sectionUsed.add(q.id));
+          topicQuestions.forEach(q => sectionUsed.add(q._id));
         });
       });
       usedQuestionsMap.set(section.id, sectionUsed);
@@ -143,7 +143,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
               q.tags.chapter === ch.chapter &&
               q.tags.topic === topic.topic
             ).slice(0, topic.count);
-            topicQuestions.forEach(q => allUsedQuestions.add(q.id));
+            topicQuestions.forEach(q => allUsedQuestions.add(q._id));
           });
 
           // Add questions used directly in chapters (without topics)
@@ -153,7 +153,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
               q.tags.exam_type === examType &&
               q.tags.chapter === ch.chapter
             ).slice(0, ch.count);
-            chapterQuestions.forEach(q => allUsedQuestions.add(q.id));
+            chapterQuestions.forEach(q => allUsedQuestions.add(q._id));
           }
         });
       }
@@ -165,7 +165,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
 
     return questions.filter((q) => {
       // Skip if question is already used
-      if (allUsedQuestions.has(q.id)) {
+      if (allUsedQuestions.has(q._id)) {
         return false;
       }
 
@@ -474,7 +474,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
     const usedQuestionIds = new Set<string>();
     chapterDist.topics.forEach((topic) => {
       const topicQuestions = availableQuestions.filter(
-        (q) => q.tags.topic === topic.topic && !usedQuestionIds.has(q.id)
+        (q) => q.tags.topic === topic.topic && !usedQuestionIds.has(q._id)
       );
 
       if (topicQuestions.length < topic.count) {
@@ -486,7 +486,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
         // Track used questions
         topicQuestions
           .slice(0, topic.count)
-          .forEach((q) => usedQuestionIds.add(q.id));
+          .forEach((q) => usedQuestionIds.add(q._id));
       }
     });
 
@@ -727,7 +727,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
       setup.chapterDistribution.forEach((chapter) => {
         // Get available questions for this chapter
         const chapterQuestions = getFilteredQuestions(setup, chapter.chapter)
-          .filter(q => !usedQuestionIds.has(q.id));
+          .filter(q => !usedQuestionIds.has(q._id));
 
         // First, handle topic-based selections
         if (chapter.topics && chapter.topics.length > 0) {
@@ -737,13 +737,13 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
           chapter.topics.forEach((topic) => {
             const topicQuestions = chapterQuestions.filter(q => 
               q.tags.topic === topic.topic && 
-              !usedQuestionIds.has(q.id)
+              !usedQuestionIds.has(q._id)
             );
             
             const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
             const selectedQuestions = shuffled.slice(0, topic.count);
             
-            selectedQuestions.forEach(q => usedQuestionIds.add(q.id));
+            selectedQuestions.forEach(q => usedQuestionIds.add(q._id));
             sectionQuestions.push(...selectedQuestions);
           });
 
@@ -751,11 +751,11 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
           if (topicQuestionsCount < chapter.count) {
             const remainingCount = chapter.count - topicQuestionsCount;
             const remainingQuestions = chapterQuestions
-              .filter(q => !usedQuestionIds.has(q.id))
+              .filter(q => !usedQuestionIds.has(q._id))
               .sort(() => Math.random() - 0.5)
               .slice(0, remainingCount);
 
-            remainingQuestions.forEach(q => usedQuestionIds.add(q.id));
+            remainingQuestions.forEach(q => usedQuestionIds.add(q._id));
             sectionQuestions.push(...remainingQuestions);
           }
         } else {
@@ -763,7 +763,7 @@ export const QuizGeneratorWizard: React.FC<QuizGeneratorWizardProps> = ({
           const shuffled = [...chapterQuestions].sort(() => Math.random() - 0.5);
           const selectedQuestions = shuffled.slice(0, chapter.count);
           
-          selectedQuestions.forEach(q => usedQuestionIds.add(q.id));
+          selectedQuestions.forEach(q => usedQuestionIds.add(q._id));
           sectionQuestions.push(...selectedQuestions);
         }
       });
