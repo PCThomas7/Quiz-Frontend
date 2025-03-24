@@ -117,7 +117,7 @@ export const PrintView: React.FC<PrintViewProps> = ({
             
               {/* Section title that flows with the content */}
               <h3 className="section-title">
-                {section.marks_per_question} marks each {section.negative_marks > 0 && `(${section.negative_marks} negative marks each)`}
+                {section.marks} marks each {section.negativeMarks > 0 && `(${section.negative_marks} negative marks each)`}
               </h3>
               
               {/* Questions flow naturally in the container */}
