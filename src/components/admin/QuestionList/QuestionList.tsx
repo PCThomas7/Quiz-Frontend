@@ -187,20 +187,35 @@ export const QuestionList: React.FC<QuestionListProps> = ({
             </span>
           )
       )}
-      {question.usedInQuizzes && question.usedInQuizzes.length > 0 && quizzes && ( // Add quizzes check
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          Used in:{" "}
-          {question.usedInQuizzes
-            .map((quizId) => {
-              const quiz = quizzes.find((q) => q.id === quizId);
-              return quiz?.title || 'Unknown Quiz'; // Provide fallback text
-            })
-            .filter(Boolean)
-            .join(", ")}
-        </span>
+      {question.quizTitles && question.quizTitles.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {question.quizTitles.map((quiz, index) => (
+            <span
+              key={quiz.id}
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+            >
+              {quiz.title}
+              {index < question.quizTitles.length - 1 ? "," : ""}
+            </span>
+          ))}
+        </div>
       )}
     </div>
-  );
+);
+  //     {question.usedInQuizzes && question.usedInQuizzes.length > 0 && quizzes && ( // Add quizzes check
+  //       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+  //         Used in:{" "}
+  //         {question.usedInQuizzes
+  //           .map((quizId) => {
+  //             const quiz = quizzes.find((q) => q.id === quizId);
+  //             return quiz?.title || 'Unknown Quiz'; // Provide fallback text
+  //           })
+  //           .filter(Boolean)
+  //           .join(", ")}
+  //       </span>
+  //     )}
+  //   </div>
+  // );
 
   // If tag system is not loaded yet, show loading
   if (!tagSystem) {

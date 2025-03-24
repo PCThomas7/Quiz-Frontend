@@ -119,14 +119,14 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
     }
   };
 
+  // Update the section check in handleSaveSection
   const handleSaveSection = () => {
-
-    if(section?.TotalQuestion === undefined || section?.TotalQuestion === 0) {
+    if(section?.total_questions === undefined || section?.total_questions === 0) {
       setError("Please enter the total number of questions for this section.");
       return false;
     }
-   else if(section?.TotalQuestion && selectedQuestionsToSave.length !== section.TotalQuestion ) {
-      setError(`Please select exactly ${section.TotalQuestion} questions. Currently selected: ${selectedQuestionsToSave.length}`);
+   else if(section?.total_questions && selectedQuestionsToSave.length !== section.total_questions) {
+      setError(`Please select exactly ${section.total_questions} questions. Currently selected: ${selectedQuestionsToSave.length}`);
       return false;
     }else{
       setError("");
@@ -212,21 +212,21 @@ export const QuestionSelector: React.FC<QuestionSelectorProps> = ({
       <div className="flex justify-between items-center bg-blue-50 p-3 rounded-md">
         <div className="text-blue-700 font-medium">
           Selected Questions: {selectedQuestionsToSave.length}
-          {section?.TotalQuestion && (
+          {section?.total_questions && (
             <span className="ml-2 text-gray-600">
-              / {section.TotalQuestion} required
+              / {section.total_questions} required
             </span>
           )}
         </div>
-        {section?.TotalQuestion && (
+        {section?.total_questions && (
           <div className={`text-sm ${
-            selectedQuestionsToSave.length === section.TotalQuestion 
+            selectedQuestionsToSave.length === section.total_questions 
               ? 'text-green-600' 
               : 'text-orange-600'
           }`}>
-            {selectedQuestionsToSave.length === section.TotalQuestion 
+            {selectedQuestionsToSave.length === section.total_questions 
               ? '✓ Correct number of questions selected'
-              : `${section.TotalQuestion - selectedQuestionsToSave.length} more questions needed`
+              : `${section.total_questions - selectedQuestionsToSave.length} more questions needed`
             }
           </div>
         )}

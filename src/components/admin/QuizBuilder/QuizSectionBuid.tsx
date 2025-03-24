@@ -314,14 +314,7 @@ export const QuizSectionBuilder: React.FC<QuizSectionBuilderProps> = ({
             </div>
           ) : (
             <>
-              {/* <QuestionSelector
-                questions={availableQuestions}
-                tagSystem={tagSystem}
-                selectedQuestions={section.questions}
-                onSelect={handleManualQuestionSelect}
-                quizzes={quizzes}
-                section={section}
-              /> */}
+            
               <QuizSelector 
                   questions={availableQuestions}
                   tagSystem={tagSystem}

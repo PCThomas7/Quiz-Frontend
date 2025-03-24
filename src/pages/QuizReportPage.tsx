@@ -57,7 +57,7 @@ const QuizReportPage: React.FC = () => {
   const handleBackToDashboard = () => {
     // Navigate back to the appropriate dashboard based on user role
     if (user?.role === "Admin") {
-      navigate("/dashboard");
+      navigate("/admin/");
     } else {
       navigate("/student/dashboard");
     }
@@ -65,7 +65,7 @@ const QuizReportPage: React.FC = () => {
 
   const handleRetakeQuiz = () => {
     // Navigate to take the quiz again
-    navigate(`/dashboard/take-quiz/${quizId}`);
+    navigate(`/admin/quizzes/take/${quizId}`);
   };
 
   if (loading) {

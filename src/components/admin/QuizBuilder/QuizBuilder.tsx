@@ -176,16 +176,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     setIsSaving(false);
   }
 };
-  // // Function to handle adding a new section
-  // const handleAddSection = (section: QuizSection) => {
-  //   setQuiz((prev) => ({
-  //     ...prev,
-  //     sections: [...prev.sections, section],
-  //   }));
-  //   setIsAddSectionModalOpen(false); // Close the modal
-  // };
-
-  // Add the missing function declaration
+ 
   const handleGeneratedSections = (sections: any[]) => {
     setQuiz(prev => ({
       ...prev,
