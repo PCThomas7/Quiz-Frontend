@@ -71,7 +71,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
       // Check if question is used in any section except the current one
       return !quiz.sections.some(section => 
         section.id !== sectionId && 
-        section.questions.some(q => q._id === question._id)
+        section.questions.some(q => q.id === question.id)
       );
     });
   };
@@ -145,7 +145,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     // Update questions with quiz usage
     const updatedQuestions = questions.map((q) => {
       const isUsedInThisQuiz = quiz.sections.some((section) =>
-        section.questions.some((sq) => sq._id === q._id)
+        section.questions.some((sq) => sq.id === q.id)
       );
 
       if (isUsedInThisQuiz) {
@@ -202,7 +202,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     return new Set(
       quiz.sections
         .filter(section => section.id !== sectionId)
-        .flatMap(section => section.questions.map(q => q._id))
+        .flatMap(section => section.questions.map(q => q.id))
     );
   };
 

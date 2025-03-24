@@ -23,10 +23,18 @@ export const quizService = {
     return response.data;
   },
   
-  deleteQuiz: async (quizId) => {
-    const response = await api.delete(`/quizzes/${quizId}`);
-    return response.data;
-  },
+  deleteQuiz: async (quizId: string) => {
+    try {
+        const response = await api.delete(`/quizzes/${quizId}`);
+        if (!response.data) {
+            throw new Error('No response from server');
+        }
+        return response.data;
+    } catch (error: any) {
+        console.error('Error deleting quiz:', error);
+        throw new Error(error.response?.data?.message || 'Failed to delete quiz');
+    }
+},
   
   // Question Operations
   getQuizQuestions: async (quizId) => {

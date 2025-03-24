@@ -56,7 +56,7 @@ export interface Quiz {
   id: string;
   title: string;
   sections: QuizSection[];
-  total_duration: number;
+  timeLimit: number;
   total_marks: number;
   createdAt: string;
   updatedAt: string;

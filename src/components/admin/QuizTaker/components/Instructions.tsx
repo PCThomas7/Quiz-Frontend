@@ -37,7 +37,7 @@ export function Instructions({
             <li>
               <ul className="list-disc pl-6 space-y-2">
                 <li className="text-gray-800">
-                  Total duration of {quiz.title} is {quiz.total_duration} min.
+                  Total duration of {quiz.title} is {quiz.timeLimit} min.
                 </li>
               </ul>
             </li>

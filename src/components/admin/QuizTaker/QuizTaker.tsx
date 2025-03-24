@@ -36,7 +36,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
   // Quiz state
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(quiz.total_duration * 60);
+  const [timeRemaining, setTimeRemaining] = useState(quiz.timeLimit * 60);
   const [questionStatus, setQuestionStatus] = useState<
     Record<string, QuestionStatus>
   >({});
@@ -274,7 +274,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
       // Submit the quiz attempt to the backend with userId
       await quizService.submitQuizAttempt(quiz.id, {
         answers,
-        timeSpent: quiz.total_duration * 60 - timeRemaining,
+        timeSpent: quiz.timeLimit * 60 - timeRemaining,
         completed: true,
         userId // Add userId to the request
       });
@@ -289,7 +289,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     console.log("Submitted answers:", answers);
     // Also call the original onSubmit callback
     onSubmit(answers);
-  }, [questionStatus, onSubmit, quiz.id, quiz.total_duration, timeRemaining, navigate]);
+  }, [questionStatus, onSubmit, quiz.id, quiz.timeLimit, timeRemaining, navigate]);
 
   // Add a handler for retaking the quiz
   const handleRetakeQuiz = useCallback(() => {
@@ -298,12 +298,12 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     setAcceptedInstructions(false);
     setCurrentSection(0);
     setCurrentQuestion(0);
-    setTimeRemaining(quiz.total_duration * 60);
+    setTimeRemaining(quiz.timeLimit * 60);
     setQuestionStatus({});
     setTempAnswers({});
     setSubmittedAnswers({});
     startTimeRef.current = null;
-  }, [quiz.total_duration]);
+  }, [quiz.timeLimit]);
 
   // Timer effect
   useEffect(() => {
@@ -316,7 +316,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
     const updateTimer = () => {
       if (!startTimeRef.current) return;
       const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      const remaining = Math.max(0, quiz.total_duration * 60 - elapsed);
+      const remaining = Math.max(0, quiz.timeLimit * 60 - elapsed);
 
       if (remaining === 0) {
         if (timerRef.current) {
@@ -335,7 +335,7 @@ export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps)
         window.clearInterval(timerRef.current);
       }
     };
-  }, [view, quiz.total_duration, handleSubmit]);
+  }, [view, quiz.timeLimit, handleSubmit]);
 
   // Status counters
   const getStatusCounts = useCallback(() => {

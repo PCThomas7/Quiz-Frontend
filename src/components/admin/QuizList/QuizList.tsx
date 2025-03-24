@@ -3,7 +3,7 @@ import { Quiz } from '../../../types/types';
 import { PrintView } from '../PrintView/PrintView';
 import { quizService } from '../../../services/quizService';
 import { useNavigate } from 'react-router-dom';
-
+import { toast } from 'react-hot-toast'; // Add this import
 import './QuizList.css';
 
 interface QuizListProps {
@@ -15,8 +15,8 @@ interface QuizListProps {
 }
 
 export function QuizList({ 
-  onEditQuiz, 
-  onDeleteQuiz, 
+  onEditQuiz,
+  onDeleteQuiz,  // Add this prop
   onDuplicateQuiz, 
   onTakeQuiz,
   onCreateQuiz
@@ -55,22 +55,33 @@ useEffect(() => {
     try {
       setLoading(true);
       const response = await quizService.getQuizzes();
-      console.log('Quizzes with populated questions:', response.quizzes);
       
       // Check if we have quizzes data with populated questions
       if (response.quizzes) {
-        // Ensure each quiz has an id property
-        const processedQuizzes = response.quizzes.map(quiz => {
-          // If quiz doesn't have id but has _id, use _id as id
-          if (!quiz.id && quiz._id) {
-            return { ...quiz, id: quiz._id };
-          }
-          return quiz;
-        });
+        // Ensure each quiz has required properties
+        const processedQuizzes = response.quizzes.map(quiz => ({
+          ...quiz,
+          id: quiz.id || quiz._id,
+          header: quiz.header || [],        // Initialize empty array if header is undefined
+          instructions: quiz.instructions || [], // Initialize empty array if instructions is undefined
+          footer: quiz.footer || [],        // Initialize empty array if footer is undefined
+          sections: quiz.sections || [],    // Initialize empty array if sections is undefined
+          watermark: quiz.watermark || {}   // Initialize empty object if watermark is undefined
+        }));
         
         setQuizzes(processedQuizzes);
       } else {
-        setQuizzes(response);
+        // Process the response if it's directly an array
+        const processedQuizzes = response.map(quiz => ({
+          ...quiz,
+          id: quiz.id || quiz._id,
+          header: quiz.header || [],
+          instructions: quiz.instructions || [],
+          footer: quiz.footer || [],
+          sections: quiz.sections || [],
+          watermark: quiz.watermark || {}
+        }));
+        setQuizzes(processedQuizzes);
       }
       
       setError(null);
@@ -84,6 +95,27 @@ useEffect(() => {
 
   fetchQuizzes();
 }, []);
+
+// Update the onEditQuiz handler to ensure all required properties exist
+const handleEditQuiz = (quiz: Quiz) => {
+  const preparedQuiz = {
+    ...quiz,
+    header: quiz.header || [],
+    instructions: quiz.instructions || [],
+    footer: quiz.footer || [],
+    sections: quiz.sections || [],
+    watermark: quiz.watermark || {}
+  };
+  onEditQuiz(preparedQuiz);
+};
+
+// Update the button onClick to use the new handler
+<button
+  onClick={() => handleEditQuiz(quiz)}
+  className="text-indigo-600 hover:text-indigo-900"
+>
+  Edit
+</button>
 
   const handlePrintQuiz = (quiz: Quiz) => {
     setSelectedQuizForPrint(quiz);
@@ -106,18 +138,43 @@ useEffect(() => {
   };
 
   // Handle quiz deletion with backend integration
+  // Update the handleDeleteQuiz function
   const handleDeleteQuiz = async (quizId: string) => {
-    if (window.confirm('Are you sure you want to delete this quiz?')) {
-      try {
-        await quizService.deleteQuiz(quizId);
-        setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
-        onDeleteQuiz(quizId);
-      } catch (err) {
-        console.error('Error deleting quiz:', err);
-        alert('Failed to delete quiz. Please try again.');
-      }
+    if (!window.confirm('Are you sure you want to delete this quiz? This will also delete all attempts and cannot be undone.')) {
+        return;
     }
-  };
+
+    try {
+        setLoading(true);
+        const specificQuiz = quizzes.find(q => q.id === quizId);
+        if (!specificQuiz) {
+            throw new Error('Quiz not found');
+        }
+
+        await quizService.deleteQuiz(quizId);
+        
+        // Update local state only for the specific quiz
+        setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
+        toast.success('Quiz deleted successfully');
+        
+        // Notify parent component
+        onDeleteQuiz(quizId);
+    } catch (error: any) {
+        console.error('Error deleting quiz:', error);
+        toast.error(error.message || 'Failed to delete quiz. Please try again.');
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Update the delete button in the table
+<button
+  onClick={() => handleDeleteQuiz(quiz.id)}
+  className="text-red-600 hover:text-red-900 disabled:opacity-50"
+  disabled={loading}
+>
+  {loading ? 'Deleting...' : 'Delete'}
+</button>
 
   // Add a function to navigate to the quiz report
   const handleViewReport = (quizId: string) => {
@@ -228,7 +285,7 @@ useEffect(() => {
                             {quiz.title}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                            {quiz.total_duration || quiz.totalDuration} minutes
+                            {quiz.timeLimit || quiz.totalDuration} minutes
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {quiz.totalMarks || calculateTotalMarks(quiz)}
@@ -257,7 +314,7 @@ useEffect(() => {
                                 View Report
                               </button>
                               <button
-                                onClick={() => onEditQuiz(quiz)}
+                                onClick={() => handleEditQuiz(quiz)}
                                 className="text-indigo-600 hover:text-indigo-900"
                               >
                                 Edit

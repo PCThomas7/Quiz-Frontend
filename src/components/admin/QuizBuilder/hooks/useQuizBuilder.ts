@@ -10,7 +10,7 @@ export const useQuizBuilder = (initialQuiz?: Quiz) => {
       instructions: [],
       footer: [],
       sections: [],
-      total_duration: 0,
+      timeLimit: 0,
       total_marks: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
