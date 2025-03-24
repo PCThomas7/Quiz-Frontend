@@ -25,7 +25,7 @@ const SignIn = () => {
       if (user?.role === 'Student') {
         navigate('/student/dashboard');
       } else if (user?.role === 'Admin' || user?.role === 'Super Admin') {
-        navigate('/dashboard');
+        navigate('/admin'); // Changed from '/dashboard' to '/admin'
       }
     } catch (err) {
       console.error('Sign-in error:', err);

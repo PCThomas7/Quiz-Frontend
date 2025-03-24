@@ -24,13 +24,13 @@ interface QuestionBulkUploaderProps {
 }
 
 const convertRowToQuestion = (row: any): Question => ({
-  _id: crypto.randomUUID(),
-  question_text: row.question_text,
-  option_a: row.option_a || '',
-  option_b: row.option_b || '',
-  option_c: row.option_c || '',
-  option_d: row.option_d || '',
-  correct_answer: row.correct_answer,
+  id: crypto.randomUUID(), // Change _id to id
+  question_text: row.question_text?.trim(),
+  option_a: row.option_a?.trim() || '',
+  option_b: row.option_b?.trim() || '',
+  option_c: row.option_c?.trim() || '',
+  option_d: row.option_d?.trim() || '',
+  correct_answer: row.correct_answer?.trim(),
   explanation: row.explanation?.trim() || '',
   image_url: row.question_image_url || '',
   option_a_image_url: row.a_image_url || '',
@@ -39,13 +39,13 @@ const convertRowToQuestion = (row: any): Question => ({
   option_d_image_url: row.d_image_url || '',
   explanation_image_url: row.explanation_image_url || '',
   tags: {
-    exam_type: row.exam_type,
-    subject: row.subject,
-    chapter: row.chapter,
-    topic: row.topic,
-    difficulty_level: row.difficulty_level,
-    question_type: row.question_type,
-    source: row.source,
+    exam_type: row.exam_type?.trim(),
+    subject: row.subject?.trim(),
+    chapter: row.chapter?.trim(),
+    topic: row.topic?.trim(),
+    difficulty_level: row.difficulty_level?.trim(),
+    question_type: row.question_type?.trim(),
+    source: row.source?.trim(),
   },
 });
 
@@ -60,6 +60,9 @@ const validateCsv = async (
     duplicatesInSystem: [],
     invalidTags: []
   };
+
+  // Ensure existingQuestions is an array
+  const questions = Array.isArray(existingQuestions) ? existingQuestions : [];
 
   // Required columns
   const requiredColumns = [
@@ -172,9 +175,10 @@ const validateCsv = async (
     }
 
     // Check for duplicates in system
+    // Update the system duplicates check
     const systemDuplicates = findSimilarQuestions(
       row.question_text,
-      existingQuestions,
+      questions, // Use the sanitized questions array
       0.7
     );
     if (systemDuplicates.length > 0) {

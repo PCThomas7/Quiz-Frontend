@@ -10,12 +10,12 @@ import { tagService } from '../../../services/tagService';
 
 interface QuestionListProps {
   onEditQuestion: (question: Question) => void;
-  quizzes: Quiz[];
+  quizzes?: Quiz[]; // Make quizzes optional
 }
 
 export const QuestionList: React.FC<QuestionListProps> = ({
   onEditQuestion,
-  quizzes,
+  quizzes = [], // Provide default empty array
 }) => {
   // State variables
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -187,13 +187,13 @@ export const QuestionList: React.FC<QuestionListProps> = ({
             </span>
           )
       )}
-      {question.usedInQuizzes && question.usedInQuizzes.length > 0 && (
+      {question.usedInQuizzes && question.usedInQuizzes.length > 0 && quizzes && ( // Add quizzes check
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           Used in:{" "}
           {question.usedInQuizzes
             .map((quizId) => {
               const quiz = quizzes.find((q) => q.id === quizId);
-              return quiz?.title;
+              return quiz?.title || 'Unknown Quiz'; // Provide fallback text
             })
             .filter(Boolean)
             .join(", ")}

@@ -8,10 +8,17 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/common/ProtectedRoute";
-import Dashboard from "./pages/QuizDashboard";
+import QuizDashboard from "./pages/QuizDashboard";
 import StudentAnalyticsDashboard from "./pages/student-analytics-dashboard";
-import QuizReportPage from "./pages/QuizReportPage"; // We'll create this page
-
+import QuizReportPage from "./pages/QuizReportPage";
+// Import new pages
+import QuestionListPage from "./pages/admin/QuestionListPage";
+import QuestionCreatorPage from "./pages/admin/QuestionCreatorPage";
+import QuestionBulkUploadPage from "./pages/admin/QuestionBulkUploadPage";
+import QuizBuilderPage from "./pages/admin/QuizBuilderPage";
+import QuizListPage from "./pages/admin/QuizListPage";
+import TagManagerPage from "./pages/admin/TagManagerPage";
+import QuizTakerPage from "./pages/admin/QuizTakerPage";
 
 function App() {
   return (
@@ -25,16 +32,28 @@ function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
 
-            {/* Protected routes */}
-            <Route
-              path="/dashboard/*"
+            {/* Admin routes */}
+            <Route 
+              path="/admin/*" 
               element={
                 <ProtectedRoute requiredRole={["Admin"]}>
-                  <Dashboard />
+                  <QuizDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="questions" replace />} />
+              <Route path="questions" element={<QuestionListPage />} />
+              <Route path="questions/create" element={<QuestionCreatorPage />} />
+              <Route path="questions/edit/:questionId" element={<QuestionCreatorPage />} />
+              <Route path="questions/upload" element={<QuestionBulkUploadPage />} />
+              <Route path="quizzes" element={<QuizListPage />} />
+              <Route path="quizzes/create" element={<QuizBuilderPage />} />
+              <Route path="quizzes/edit/:quizId" element={<QuizBuilderPage />} />
+              <Route path="quizzes/take/:quizId" element={<QuizTakerPage />} />
+              <Route path="tags" element={<TagManagerPage />} />
+            </Route>
 
+            {/* Student routes */}
             <Route
               path="/student/dashboard"
               element={
@@ -49,18 +68,8 @@ function App() {
               element={<StudentAnalyticsDashboard studentId="10" />}
             />
 
-            {/* Quiz Dashboard
+            {/* Quiz Report Route */}
             <Route
-              path="/quizzes"
-              element={
-                <ProtectedRoute requiredRole={["Admin"]}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            /> */}
-
-             {/* Quiz Report Route */}
-             <Route
               path="/quiz-report/:quizId"
               element={
                 <ProtectedRoute requiredRole={["Student", "Admin"]}>

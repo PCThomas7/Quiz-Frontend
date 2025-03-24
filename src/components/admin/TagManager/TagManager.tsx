@@ -261,21 +261,7 @@ const TagManager: React.FC<TagManagerProps> = ({
     event.target.value = '';
   };
 
-  // Add useEffect to fetch tags when component mounts
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        setError(null);
-        const updatedTags = await tagService.getAllTags();
-        onUpdateTagSystem(updatedTags);
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-        setError('Failed to fetch tags from server');
-      }
-    };
 
-    fetchTags();
-  }, [onUpdateTagSystem]);
 
   const handleAddTag = async () => {
     if (!selectedCategory || !newTag.trim()) {
