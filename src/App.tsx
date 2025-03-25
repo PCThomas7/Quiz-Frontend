@@ -19,12 +19,14 @@ import QuizBuilderPage from "./pages/admin/QuizBuilderPage";
 import QuizListPage from "./pages/admin/QuizListPage";
 import TagManagerPage from "./pages/admin/TagManagerPage";
 import QuizTakerPage from "./pages/admin/QuizTakerPage";
+import UserManagement from "./pages/admin/UserManagement";
 // Import student pages
 import StudentQuizListPage from "./pages/student/StudentQuizListPage";
 import StudentQuizTakerPage from "./pages/student/StudentQuizTakerPage";
 import StudentQuizBuilderPage from "./pages/student/StudentQuizBuilderPage";
 // Import layouts
 import { StudentLayout } from "./components/layouts/StudentLayout";
+import { AdminLayout } from "./components/layouts/AdminLayout";
 
 function App() {
   return (
@@ -43,7 +45,7 @@ function App() {
               path="/admin/*" 
               element={
                 <ProtectedRoute requiredRole={["Admin"]}>
-                  <QuizDashboard />
+                  <AdminLayout />
                 </ProtectedRoute>
               }
             >
@@ -57,6 +59,7 @@ function App() {
               <Route path="quizzes/edit/:quizId" element={<QuizBuilderPage />} />
               <Route path="quizzes/take/:quizId" element={<QuizTakerPage />} />
               <Route path="tags" element={<TagManagerPage />} />
+              <Route path="users" element={<UserManagement />} />
             </Route>
 
             {/* Student routes */}

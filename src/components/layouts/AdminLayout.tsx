@@ -80,6 +80,16 @@ export function AdminLayout() {
               >
                 Manage Tags
               </Link>
+              <Link
+                to="/admin/users"
+                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
+                  location.pathname === '/admin/users'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                Manage Users
+              </Link>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-700">
