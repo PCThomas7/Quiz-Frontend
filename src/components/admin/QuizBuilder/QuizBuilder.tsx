@@ -119,8 +119,6 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     fetchData();
   }, []);
 
-  // Update handleSave to use backend service
-  // Remove the first handleSave declaration and keep the more complete one
   const handleSave = async () => {
     // Validate title
     if (!quiz.title || quiz.title.trim() === "") {
@@ -140,56 +138,52 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
         ...quiz,
         batchAssignment,
         assignedBatches: batchAssignment === "SPECIFIC" ? selectedBatches : [],
-        createdBy: user?.id || "", // Use authenticated user's ID
+        createdBy: user?.id || "",
         updatedAt: new Date().toISOString(),
       };
 
       // Save quiz to backend
-      const response = !quiz.title
+      const response = !quiz.id
         ? await quizService.updateQuiz(quiz.id, updatedQuiz)
         : await quizService.createQuiz(updatedQuiz);
 
-      // If quiz was saved successfully, assign batches
-      if (response.data && response.data.id) {
-        try {
-          await quizService.assignBatches(
-            response.data.id,
-            batchAssignment,
-            batchAssignment === "SPECIFIC" ? selectedBatches : []
-          );
-        } catch (error) {
-          console.error("Failed to assign batches:", error);
-          toast.error("Quiz saved but batch assignments failed");
-        }
+      // Get the correct quiz ID from response
+      const quizIdToUse = response.data?.quiz?.id || response.data?.id || quiz.id;
+      
+      if (!quizIdToUse) {
+          throw new Error('Failed to get quiz ID from response');
       }
 
-      // Update questions with quiz usage
+      // Update questions with the NEW quiz ID
       const updatedQuestions = questions.map((q) => {
-        const isUsedInThisQuiz = quiz.sections.some((section) =>
-          section.questions.some((sq) => sq.id === q.id)
-        );
+          const isUsedInThisQuiz = quiz.sections.some((section) =>
+              section.questions.some((sq) => sq.id === q.id)
+          );
 
-        if (isUsedInThisQuiz) {
-          const usedInQuizzes = new Set(q.usedInQuizzes || []);
-          usedInQuizzes.add(quiz.id);
-          return {
-            ...q,
-            usedInQuizzes: Array.from(usedInQuizzes),
-          };
-        }
-        return q;
+          if (isUsedInThisQuiz) {
+              const usedInQuizzes = new Set(q.usedInQuizzes || []);
+              usedInQuizzes.add(quizIdToUse);
+              return {
+                  ...q,
+                  usedInQuizzes: Array.from(usedInQuizzes),
+              };
+          }
+          return q;
       });
 
-      // Update questions in backend with error handling
+      // Update questions in backend
       try {
-        await questionService.bulkUpdateQuestions(updatedQuestions);
+          const usedQuestionIds = quiz.sections
+              .flatMap(section => section.questions.map(q => q.id));
+          
+          await questionService.updateQuizUsage(quizIdToUse, usedQuestionIds);
       } catch (error) {
-        console.error("Failed to update questions:", error);
-        toast.error("Quiz saved but question updates failed");
+          console.error("Failed to update questions:", error);
+          toast.error("Quiz saved but question usage tracking failed");
       }
 
       toast.success("Quiz saved successfully!");
-      onSave(response.data, updatedQuestions);
+      onSave({ ...response.data.quiz, id: quizIdToUse }, updatedQuestions);
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save quiz");

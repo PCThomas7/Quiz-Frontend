@@ -32,5 +32,14 @@ export const questionService = {
   bulkUpdateQuestions: async (questions: Question[]) => {
     const response = await api.patch('/questions/bulk-update', { questions });
     return response.data;
-  }
+  },
+  
+  // Add new service method
+  updateQuizUsage: async (quizId: string, questionIds: string[]) => {
+    const response = await api.post('/quizzes/update-quiz-usage', {
+      quizId,
+      questionIds
+    });
+    return response.data;
+  },
 };

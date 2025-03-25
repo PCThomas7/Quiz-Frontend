@@ -18,7 +18,12 @@ export const quizService = {
   
   createQuiz: async (quizData) => {
     const response = await api.post('/quizzes', quizData);
-    return response.data;
+    return {
+      data: {
+        quiz: response.data.quiz,
+        id: response.data.quiz.id
+      }
+    };
   },
   
   updateQuiz: async (quizId, quizData) => {
@@ -172,6 +177,16 @@ export const quizService = {
     } catch (error) {
       console.error('Error fetching quiz batches:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch quiz batches');
+    }
+  },
+  
+  getStudentQuizzes: async () => {
+    try {
+      const response = await api.get('/student/quizzes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching student quizzes:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch student quizzes');
     }
   },
 };

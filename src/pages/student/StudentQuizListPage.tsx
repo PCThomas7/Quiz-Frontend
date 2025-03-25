@@ -15,9 +15,19 @@ export default function StudentQuizListPage() {
     const fetchQuizzes = async () => {
       try {
         setLoading(true);
-        // Fetch quizzes assigned to the student
         const response = await quizService.getStudentQuizzes();
-        setQuizzes(response.quizzes || []);
+        
+        // Transform and filter quizzes if needed
+        const availableQuizzes = response.quizzes.map(quiz => ({
+          ...quiz,
+          attempted: false, // You might want to check this from quiz attempts
+          totalQuestions: quiz.sections.reduce(
+            (acc, section) => acc + section.questions.length, 
+            0
+          )
+        }));
+        
+        setQuizzes(availableQuizzes);
       } catch (error) {
         console.error('Error fetching quizzes:', error);
         toast.error('Failed to load quizzes');
