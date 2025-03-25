@@ -1,6 +1,9 @@
 // src/services/quizService.js
 import { api } from './api';
 
+// Add these methods to your existing quizService.ts file
+
+// Update the quizService object to include batch assignment methods
 export const quizService = {
   // Quiz CRUD Operations
   getQuizzes: async () => {
@@ -145,6 +148,31 @@ export const quizService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch question statistics');
     }
-  }
+  },
+
+
+  //Batch Assignment Operations
+  assignBatches: async (quizId, batchAssignment, batchIds) => {
+    try {
+      const response = await api.post(`/quizzes/${quizId}/batches`, {
+        batchAssignment,
+        batchIds
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error assigning batches:', error);
+      throw new Error(error.response?.data?.message || 'Failed to assign batches to quiz');
+    }
+  },
+  
+  getQuizBatches: async (quizId) => {
+    try {
+      const response = await api.get(`/quizzes/${quizId}/batches`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching quiz batches:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch quiz batches');
+    }
+  },
 };
 export default quizService;

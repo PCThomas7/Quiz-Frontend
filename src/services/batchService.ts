@@ -1,7 +1,8 @@
 // src/services/batchService.js
 import { api } from './api';
+import { Batch } from '../types/types';
 
-const batchService = {
+export const batchService = {
   // Batch CRUD Operations
   getBatches: async () => {
     try {
@@ -48,89 +49,34 @@ const batchService = {
     }
   },
   
-  // Batch Course Management
-  getBatchCourses: async (batchId) => {
+  // Quiz-Batch Assignment Operations
+  assignQuizToBatches: async (quizId, batchAssignment, batchIds) => {
     try {
-      const response = await api.get(`/batches/${batchId}/courses`);
+      const response = await api.post(`/quizzes/${quizId}/batches`, {
+        batchAssignment,
+        batchIds
+      });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch batch courses');
+      throw new Error(error.response?.data?.message || 'Failed to assign quiz to batches');
     }
   },
   
-  assignCourseToBatch: async (batchId, courseIds) => {
+  getQuizBatches: async (quizId) => {
     try {
-      const response = await api.post(`/batches/${batchId}/courses`, { courseIds });
+      const response = await api.get(`/quizzes/${quizId}/batches`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to assign courses to batch');
+      throw new Error(error.response?.data?.message || 'Failed to fetch quiz batches');
     }
   },
   
-  removeCourseFromBatch: async (batchId, courseId) => {
+  getBatchQuizzes: async (batchId) => {
     try {
-      const response = await api.delete(`/batches/${batchId}/courses/${courseId}`);
+      const response = await api.get(`/batches/${batchId}/quizzes`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to remove course from batch');
-    }
-  },
-  
-  // Batch User Management
-  getBatchUsers: async (batchId) => {
-    try {
-      const response = await api.get(`/batches/${batchId}/users`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch batch users');
-    }
-  },
-  
-  assignUsersToBatch: async (batchId, userIds) => {
-    try {
-      const response = await api.post(`/batches/${batchId}/users`, { userIds });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to assign users to batch');
-    }
-  },
-  
-  removeUserFromBatch: async (batchId, userId) => {
-    try {
-      const response = await api.delete(`/batches/${batchId}/users/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to remove user from batch');
-    }
-  },
-  
-  // Batch Subscription Management
-  setBatchSubscription: async (batchId, expiryDate) => {
-    try {
-      const response = await api.post(`/batches/${batchId}/subscription`, { expiryDate });
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to set batch subscription');
-    }
-  },
-  
-  // Email Management for Batches
-  sendBatchEmail: async (batchId, emailData) => {
-    try {
-      const response = await api.post(`/batches/${batchId}/email`, emailData);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to send email to batch');
-    }
-  },
-  
-  // Batch Analytics
-  getBatchAnalytics: async (batchId) => {
-    try {
-      const response = await api.get(`/batches/${batchId}/analytics`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch batch analytics');
+      throw new Error(error.response?.data?.message || 'Failed to fetch batch quizzes');
     }
   }
 };
