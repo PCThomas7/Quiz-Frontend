@@ -11,7 +11,7 @@ import ProtectedRoute from "./components/common/ProtectedRoute";
 import QuizDashboard from "./pages/QuizDashboard";
 import StudentAnalyticsDashboard from "./pages/student-analytics-dashboard";
 import QuizReportPage from "./pages/QuizReportPage";
-// Import new pages
+// Import admin pages
 import QuestionListPage from "./pages/admin/QuestionListPage";
 import QuestionCreatorPage from "./pages/admin/QuestionCreatorPage";
 import QuestionBulkUploadPage from "./pages/admin/QuestionBulkUploadPage";
@@ -19,6 +19,12 @@ import QuizBuilderPage from "./pages/admin/QuizBuilderPage";
 import QuizListPage from "./pages/admin/QuizListPage";
 import TagManagerPage from "./pages/admin/TagManagerPage";
 import QuizTakerPage from "./pages/admin/QuizTakerPage";
+// Import student pages
+import StudentQuizListPage from "./pages/student/StudentQuizListPage";
+import StudentQuizTakerPage from "./pages/student/StudentQuizTakerPage";
+import StudentQuizBuilderPage from "./pages/student/StudentQuizBuilderPage";
+// Import layouts
+import { StudentLayout } from "./components/layouts/StudentLayout";
 
 function App() {
   return (
@@ -55,18 +61,20 @@ function App() {
 
             {/* Student routes */}
             <Route
-              path="/student/dashboard"
+              path="/student/*"
               element={
                 <ProtectedRoute requiredRole={["Student"]}>
-                  <StudentDashboard />
+                  <StudentLayout />
                 </ProtectedRoute>
               }
-            />
-
-            <Route
-              path="/student/report"
-              element={<StudentAnalyticsDashboard studentId="10" />}
-            />
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<StudentDashboard />} />
+              <Route path="quizzes" element={<StudentQuizListPage />} />
+              <Route path="quizzes/create" element={<StudentQuizBuilderPage />} />
+              <Route path="quizzes/take/:quizId" element={<StudentQuizTakerPage />} />
+              <Route path="analytics" element={<StudentAnalyticsDashboard studentId="10" />} />
+            </Route>
 
             {/* Quiz Report Route */}
             <Route

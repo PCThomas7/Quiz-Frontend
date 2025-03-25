@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-export function AdminLayout() {
+export function StudentLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -17,68 +17,48 @@ export function AdminLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-indigo-600">Quiz Admin</h1>
+              <h1 className="text-xl font-bold text-indigo-600">Student Portal</h1>
             </div>
             <div className="hidden md:flex space-x-6">
               <Link
-                to="/admin/questions"
+                to="/student/dashboard"
                 className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname.includes('/admin/questions') && !location.pathname.includes('/create') && !location.pathname.includes('/upload')
+                  location.pathname === '/student/dashboard'
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                View Questions
+                Dashboard
               </Link>
               <Link
-                to="/admin/questions/create"
+                to="/student/quizzes"
                 className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/questions/create'
+                  location.pathname === '/student/quizzes'
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                Create Question
+                My Quizzes
               </Link>
               <Link
-                to="/admin/questions/upload"
+                to="/student/quizzes/create"
                 className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/questions/upload'
+                  location.pathname === '/student/quizzes/create'
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                Bulk Upload
+                Create Quiz
               </Link>
               <Link
-                to="/admin/quizzes/create"
+                to="/student/analytics"
                 className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/quizzes/create'
+                  location.pathname.includes('/student/analytics')
                     ? 'bg-indigo-100 text-indigo-700'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                Quiz Builder
-              </Link>
-              <Link
-                to="/admin/quizzes"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/quizzes'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                View Quizzes
-              </Link>
-              <Link
-                to="/admin/tags"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/tags'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Manage Tags
+                My Performance
               </Link>
             </div>
             <div className="flex items-center space-x-4">

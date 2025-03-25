@@ -1,320 +1,188 @@
-import { useState } from 'react';
-import TagManager from '../components/admin/TagManager/TagManager';
-import { QuestionCreator } from '../components/admin/QuestionCreator/QuestionCreator';
-import { QuestionList } from '../components/admin/QuestionList/QuestionList';
-import { QuestionBulkUploader } from '../components/admin/QuestionBulkUploader/QuestionBulkUploader';
-import { QuizBuilder } from '../components/admin/QuizBuilder/QuizBuilder';
-import { QuizList } from '../components/admin/QuizList/QuizList';
-import { QuizTaker } from '../components/admin/QuizTaker/QuizTaker';
-import { Question, Quiz, TagSystem, DifficultyLevel, QuestionType } from '../types';
-import { Toaster } from 'react-hot-toast';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Quiz } from '../types/types';
+import { quizService } from '../services/quizService';
 
 export default function StudentDashboard() {
-  // State Management
-  const [tagSystem, setTagSystem] = useState<TagSystem>({
-    id: crypto.randomUUID(),
-    name: 'Default Tag System',
-    tags: [],
-    exam_types: [],
-    subjects: {},
-    chapters: {},
-    topics: {},
-    difficulty_levels: ['Easy', 'Medium', 'Hard'],
-    question_types: ['MCQ', 'MMCQ', 'Numerical', 'MSQ'],
-    sources: []
-  });
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'upload' | 'tags' | 'quiz' | 'quizzes' | 'take-quiz'>('list');
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | undefined>(undefined);
+  const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
+  const [upcomingQuizzes, setUpcomingQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  // Question Management Functions
-  const handleCreateQuestion = (question: Question) => {
-    setQuestions(prev => [...prev, question]);
-  };
-
-  const handleUpdateQuestion = (question: Question) => {
-    setQuestions(prev => prev.map(q => q.id === question.id ? question : q));
-  };
-
-  const handleDeleteQuestion = (questionId: string) => {
-    setQuestions(prev => prev.filter(q => q.id !== questionId));
-  };
-
-  const handleBulkUpload = (newQuestions: Question[]) => {
-    setQuestions(prev => [...prev, ...newQuestions]);
-  };
-
-  // Quiz Management Functions
-  const handleSaveQuiz = async (quiz: Quiz, updatedQuestions?: Question[]) => {
-    setQuizzes(prev => {
-      const index = prev.findIndex(q => q.id === quiz.id);
-      if (index >= 0) {
-        return [...prev.slice(0, index), quiz, ...prev.slice(index + 1)];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // In a real app, these would be separate API calls
+        const response = await quizService.getStudentQuizzes();
+        
+        // Filter for recent and upcoming quizzes
+        const now = new Date();
+        const recent = response.quizzes?.filter((q: Quiz) => 
+          q.attempted && new Date(q.updatedAt) <= now
+        ).slice(0, 3) || [];
+        
+        const upcoming = response.quizzes?.filter((q: Quiz) => 
+          !q.attempted
+        ).slice(0, 3) || [];
+        
+        setRecentQuizzes(recent);
+        setUpcomingQuizzes(upcoming);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
       }
-      return [...prev, quiz];
-    });
-    
-    if (updatedQuestions) {
-      setQuestions(updatedQuestions);
-    }
-  };
-
-  const handleDeleteQuiz = (quizId: string) => {
-    setQuizzes(prev => prev.filter(q => q.id !== quizId));
-  };
-
-  const handleDuplicateQuiz = (quiz: Quiz) => {
-    const now = new Date().toISOString();
-    const duplicatedQuiz: Quiz = {
-      ...quiz,
-      id: crypto.randomUUID(),
-      title: `${quiz.title} (Copy)`,
-      createdAt: now,
-      updatedAt: now,
     };
-    setQuizzes(prev => [...prev, duplicatedQuiz]);
+
+    fetchDashboardData();
+  }, []);
+
+  const handleViewAllQuizzes = () => {
+    navigate('/student/quizzes');
   };
 
-  const handleEditQuiz = (quiz: Quiz) => {
-    setSelectedQuiz(quiz);
-    setActiveTab('quiz');
+  const handleViewAnalytics = () => {
+    navigate('/student/analytics');
   };
 
-  const handleTakeQuiz = (quiz: Quiz) => {
-    setSelectedQuiz(quiz);
-    setActiveTab('take-quiz');
+  const handleTakeQuiz = (quizId: string) => {
+    navigate(`/student/quizzes/take/${quizId}`);
   };
 
-  const handleQuizSubmit = (answers: Record<string, string[]>) => {
-    console.log('Quiz submitted:', answers);
-    setActiveTab('quizzes');
-    setSelectedQuiz(undefined);
+  const handleViewReport = (quizId: string) => {
+    navigate(`/quiz-report/${quizId}`);
   };
 
-  // Tag Management Functions
-  const handleNewTag = (
-    category: 'exam_types' | 'sources' | 'difficulty_levels' | 'question_types',
-    value: string
-  ) => {
-    const newTagSystem = { ...tagSystem };
-    
-    switch (category) {
-      case 'difficulty_levels':
-        if (value === 'Easy' || value === 'Medium' || value === 'Hard') {
-          if (!newTagSystem.difficulty_levels.includes(value as DifficultyLevel)) {
-            newTagSystem.difficulty_levels = [...newTagSystem.difficulty_levels, value as DifficultyLevel];
-          }
-        }
-        break;
-      case 'question_types':
-        if (value === 'MCQ' || value === 'Numeric' || value === 'MMCQ') {
-          if (!newTagSystem.question_types.includes(value as QuestionType)) {
-            newTagSystem.question_types = [...newTagSystem.question_types, value as QuestionType];
-          }
-        }
-        break;
-      case 'exam_types':
-      case 'sources':
-        if (!newTagSystem[category].includes(value)) {
-          newTagSystem[category] = [...newTagSystem[category], value];
-        }
-        break;
-    }
-    
-    setTagSystem(newTagSystem);
-  };
-
-  const handleNewHierarchicalTag = (
-    examType: string,
-    subject: string,
-    chapter: string,
-    topic: string
-  ) => {
-    const newTagSystem = { ...tagSystem };
-
-    if (!newTagSystem.exam_types.includes(examType)) {
-      newTagSystem.exam_types = [...newTagSystem.exam_types, examType];
-    }
-
-    if (!newTagSystem.subjects[examType]) {
-      newTagSystem.subjects[examType] = [];
-    }
-    if (!newTagSystem.subjects[examType].includes(subject)) {
-      newTagSystem.subjects[examType] = [...newTagSystem.subjects[examType], subject];
-    }
-
-    if (!newTagSystem.chapters[subject]) {
-      newTagSystem.chapters[subject] = [];
-    }
-    if (!newTagSystem.chapters[subject].includes(chapter)) {
-      newTagSystem.chapters[subject] = [...newTagSystem.chapters[subject], chapter];
-    }
-
-    if (!newTagSystem.topics[chapter]) {
-      newTagSystem.topics[chapter] = [];
-    }
-    if (!newTagSystem.topics[chapter].includes(topic)) {
-      newTagSystem.topics[chapter] = [...newTagSystem.topics[chapter], topic];
-    }
-
-    setTagSystem(newTagSystem);
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen ">
-      <Toaster position="top-right" />
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center h-16">
-            <div className="flex space-x-8">
-              <button
-                onClick={() => setActiveTab('list')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'list'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                View Questions
-              </button>
-              {/* <button
-                onClick={() => {
-                  setSelectedQuestion(undefined);
-                  setActiveTab('create');
-                }}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'create'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {selectedQuestion ? 'Edit Question' : 'Create Question'}
-              </button> */}
-              {/* <button
-                onClick={() => setActiveTab('upload')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'upload'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Bulk Upload
-              </button> */}
-              <button
-                onClick={() => setActiveTab('quiz')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'quiz'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Quiz Builder
-              </button>
-              <button
-                onClick={() => setActiveTab('quizzes')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'quizzes'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                View Quizzes
-              </button>
-              {/* <button
-                onClick={() => setActiveTab('tags')}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  activeTab === 'tags'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Manage Tags
-              </button> */}
-            </div>
-          </div>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name || 'Student'}</h1>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-indigo-50 rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-medium text-indigo-800 mb-2">Quizzes Completed</h3>
+          <p className="text-3xl font-bold text-indigo-600">
+            {recentQuizzes.length}
+          </p>
+          <button 
+            onClick={handleViewAllQuizzes}
+            className="mt-4 text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            View all quizzes →
+          </button>
         </div>
-      </nav>
+        
+        <div className="bg-green-50 rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-medium text-green-800 mb-2">Average Score</h3>
+          <p className="text-3xl font-bold text-green-600">
+            {recentQuizzes.length > 0 
+              ? `${Math.round(recentQuizzes.reduce((acc, quiz) => acc + (quiz.userScore || 0), 0) / recentQuizzes.length)}%` 
+              : 'N/A'}
+          </p>
+          <button 
+            onClick={handleViewAnalytics}
+            className="mt-4 text-sm text-green-600 hover:text-green-800"
+          >
+            View analytics →
+          </button>
+        </div>
+        
+        <div className="bg-blue-50 rounded-lg p-6 shadow-sm">
+          <h3 className="text-lg font-medium text-blue-800 mb-2">Upcoming Quizzes</h3>
+          <p className="text-3xl font-bold text-blue-600">
+            {upcomingQuizzes.length}
+          </p>
+          <button 
+            onClick={handleViewAllQuizzes}
+            className="mt-4 text-sm text-blue-600 hover:text-blue-800"
+          >
+            View upcoming →
+          </button>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className="py-6">
-        {activeTab === 'list' && (
-          <QuestionList
-            questions={questions}
-            tagSystem={tagSystem}
-            onEditQuestion={question => {
-              setSelectedQuestion(question);
-              setActiveTab('create');
-            }}
-            onDeleteQuestion={handleDeleteQuestion}
-            quizzes={quizzes}
-          />
+      {/* Recent Quizzes */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Recent Quizzes</h2>
+          <button 
+            onClick={handleViewAllQuizzes}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            View all →
+          </button>
+        </div>
+        
+        {recentQuizzes.length === 0 ? (
+          <p className="text-gray-500 py-4">No recent quizzes found.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentQuizzes.map((quiz) => (
+              <div key={quiz.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-medium text-gray-900 mb-2">{quiz.title}</h3>
+                <div className="flex justify-between text-sm text-gray-500 mb-3">
+                  <span>Score: {quiz.userScore || 0}%</span>
+                  <span>{new Date(quiz.updatedAt).toLocaleDateString()}</span>
+                </div>
+                <button
+                  onClick={() => handleViewReport(quiz.id)}
+                  className="w-full mt-2 bg-indigo-100 text-indigo-700 py-2 px-3 rounded hover:bg-indigo-200 transition-colors"
+                >
+                  View Report
+                </button>
+              </div>
+            ))}
+          </div>
         )}
+      </div>
 
-        {activeTab === 'create' && (
-          <QuestionCreator
-            initialQuestion={selectedQuestion || undefined}
-            questions={questions}
-            tagSystem={tagSystem}
-            onSave={question => {
-              selectedQuestion ? handleUpdateQuestion(question) : handleCreateQuestion(question);
-              setSelectedQuestion(undefined);
-              setActiveTab('list');
-            }}
-            onNewTag={handleNewTag}
-            onNewHierarchicalTag={handleNewHierarchicalTag}
-          />
+      {/* Upcoming Quizzes */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Upcoming Quizzes</h2>
+          <button 
+            onClick={handleViewAllQuizzes}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            View all →
+          </button>
+        </div>
+        
+        {upcomingQuizzes.length === 0 ? (
+          <p className="text-gray-500 py-4">No upcoming quizzes found.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingQuizzes.map((quiz) => (
+              <div key={quiz.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <h3 className="font-medium text-gray-900 mb-2">{quiz.title}</h3>
+                <div className="flex justify-between text-sm text-gray-500 mb-3">
+                  <span>Duration: {quiz.total_duration} min</span>
+                  <span>{quiz.sections.reduce((acc, section) => acc + section.questions.length, 0)} questions</span>
+                </div>
+                <button
+                  onClick={() => handleTakeQuiz(quiz.id)}
+                  className="w-full mt-2 bg-indigo-600 text-white py-2 px-3 rounded hover:bg-indigo-700 transition-colors"
+                >
+                  Start Quiz
+                </button>
+              </div>
+            ))}
+          </div>
         )}
-
-        {activeTab === 'upload' && (
-          <QuestionBulkUploader
-            questions={questions}
-            tagSystem={tagSystem}
-            onImport={handleBulkUpload}
-          />
-        )}
-
-        {activeTab === 'quiz' && (
-          <QuizBuilder
-            questions={questions}
-            tagSystem={tagSystem}
-            onSave={handleSaveQuiz}
-            initialQuiz={selectedQuiz}
-            quizzes={quizzes}
-          />
-        )}
-
-        {activeTab === 'quizzes' && (
-          <QuizList
-            quizzes={quizzes}
-            onEditQuiz={handleEditQuiz}
-            onDeleteQuiz={handleDeleteQuiz}
-            onDuplicateQuiz={handleDuplicateQuiz}
-            onTakeQuiz={handleTakeQuiz}
-            onCreateQuiz={() => {
-              setSelectedQuiz(undefined); // Reset any selected quiz
-              setActiveTab('quiz'); // Switch to quiz builder tab
-            }}
-          />
-        )}
-
-        {activeTab === 'tags' && (
-          <TagManager
-            tagSystem={tagSystem}
-            questions={questions}
-            onUpdateTagSystem={setTagSystem}
-          />
-        )}
-
-        {activeTab === 'take-quiz' && selectedQuiz && (
-          <QuizTaker
-            quiz={selectedQuiz}
-            onSubmit={handleQuizSubmit}
-          />
-        )}
-      </main>
+      </div>
     </div>
   );
 }
