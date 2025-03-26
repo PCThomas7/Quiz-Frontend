@@ -3,6 +3,7 @@ import { DetailedQuizReport as DetailedQuizReportType } from '../../types/report
 import { OverallPerformanceSummary } from './OverallPerformanceSummary';
 import { SubjectWisePerformanceChart } from './SubjectWisePerformance';
 import { ChapterWisePerformanceChart } from './ChapterWisePerformance';
+import { TopicWisePerformanceChart } from './TopicWisePerformance';
 import { DifficultyWisePerformanceChart } from './DifficultyWisePerformance';
 import { QuestionTypePerformanceChart } from './QuestionTypePerformance';
 
@@ -83,6 +84,19 @@ export const DetailedQuizReport: React.FC<DetailedQuizReportProps> = ({ report, 
                 Question Type
               </button>
             )}
+            
+            {report.topicWisePerformance.length > 0 && (
+              <button
+                onClick={() => setActiveTab('topic')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'topic'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Topic-wise
+              </button>
+            )}
           </nav>
         </div>
       </div>
@@ -108,9 +122,14 @@ export const DetailedQuizReport: React.FC<DetailedQuizReportProps> = ({ report, 
           <QuestionTypePerformanceChart questionTypeData={report.questionTypePerformance} />
         )}
         
+        {activeTab === 'topic' && report.topicWisePerformance.length > 0 && (
+          <TopicWisePerformanceChart topicData={report.topicWisePerformance} />
+        )}
+        
         {/* Fallback if no data is available for the selected tab */}
         {((activeTab === 'subject' && report.subjectWisePerformance.length === 0) ||
           (activeTab === 'chapter' && report.chapterWisePerformance.length === 0) ||
+          (activeTab === 'topic' && report.topicWisePerformance.length === 0) ||
           (activeTab === 'difficulty' && report.difficultyWisePerformance.length === 0) ||
           (activeTab === 'questionType' && report.questionTypePerformance.length === 0)) && (
           <div className="text-center py-8">
