@@ -7,6 +7,8 @@ import { quizService } from '../services/quizService';
 export default function StudentDashboard() {
   const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
   const [upcomingQuizzes, setUpcomingQuizzes] = useState<Quiz[]>([]);
+  const [recentLength, setRecentLength] = useState<Number>(0);
+  const [upcomingLength, setUpcomingLength] = useState<Number>(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -23,13 +25,23 @@ export default function StudentDashboard() {
         const recent = response.quizzes?.filter((q: Quiz) => 
           q.attempted
         ).slice(0, 3) || [];
+
+        const recentLength = response.quizzes?.filter((q: Quiz) => 
+          q.attempted
+        ).length || [].length;
         
         const upcoming = response.quizzes?.filter((q: Quiz) => 
           !q.attempted
         ).slice(0, 3) || [];
+
+        const upcomingLength = response.quizzes?.filter((q: Quiz) => 
+          !q.attempted
+        ).length || [].length;
         
         setRecentQuizzes(recent);
         setUpcomingQuizzes(upcoming);
+        setRecentLength(recentLength);
+        setUpcomingLength(upcomingLength);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -75,8 +87,8 @@ export default function StudentDashboard() {
         <div className="bg-indigo-50 rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-medium text-indigo-800 mb-2">Quizzes Completed</h3>
           <p className="text-3xl font-bold text-indigo-600">
-            {recentQuizzes.length}
-            {console.log(recentQuizzes)}
+            {recentLength}
+           
           </p>
           <button 
             onClick={handleViewAllQuizzes}
@@ -104,7 +116,7 @@ export default function StudentDashboard() {
         <div className="bg-blue-50 rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-medium text-blue-800 mb-2">Upcoming Quizzes</h3>
           <p className="text-3xl font-bold text-blue-600">
-            {upcomingQuizzes.length}
+            {upcomingLength}
           </p>
           <button 
             onClick={handleViewAllQuizzes}

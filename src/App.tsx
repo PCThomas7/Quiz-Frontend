@@ -9,7 +9,7 @@ import SignUp from "./pages/SignUp";
 import StudentDashboard from "./pages/StudentDashboard";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import QuizDashboard from "./pages/QuizDashboard";
-import StudentAnalyticsDashboard from "./pages/student-analytics-dashboard";
+
 import QuizReportPage from "./pages/QuizReportPage";
 // Import admin pages
 import QuestionListPage from "./pages/admin/QuestionListPage";
