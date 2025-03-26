@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Quiz } from '../../types/types';
-import { quizService } from '../../services/quizService';
 import { QuizTaker } from '../../components/admin/QuizTaker/QuizTaker';
+import { quizService } from '../../services/quizService';
 import toast from 'react-hot-toast';
 
 export default function StudentQuizTakerPage() {
@@ -32,8 +32,13 @@ export default function StudentQuizTakerPage() {
 
   const handleSubmit = async (answers: Record<string, string[]>) => {
     try {
-      // Submit quiz answers
-      await quizService.submitQuiz(quizId!, answers);
+      // Changed from submitQuiz to submitQuizAttempt
+      await quizService.submitQuizAttempt(quizId!, {
+        answers,
+        completed: true,
+        timeSpent: quiz?.timeLimit ? quiz.timeLimit * 60 : 0
+      });
+      
       toast.success('Quiz submitted successfully!');
       navigate(`/quiz-report/${quizId}`);
     } catch (error) {
