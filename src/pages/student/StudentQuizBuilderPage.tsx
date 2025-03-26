@@ -1,38 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Quiz } from '../../types/types';
+import { Quiz, Question, TagSystem } from '../../types/types';
 import { toast } from 'react-hot-toast';
 import { quizService } from '../../services/quizService';
+import { questionService } from '../../services/questionService';
+import { QuizGeneratorWizard } from '../../components/admin/QuizBuilder/QuizGeneratorWizard';
 
 export default function StudentQuizBuilderPage() {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState(30); // Default 30 minutes
+  const [duration, setDuration] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [tagSystem, setTagSystem] = useState<TagSystem | null>(null);
+  const [showWizard, setShowWizard] = useState(false);
 
-  const handleGenerateQuiz = async () => {
+  // Fetch questions and tag system based on student's batch
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        setIsLoading(true);
+        // Fetch questions available for the student
+        const response = await quizService.getStudentQuizzes();
+        const availableQuestions = response.questions || [];
+        setQuestions(availableQuestions);
+
+        // Fetch tag system based on student's batch and exams
+        const tagResponse = await questionService.getTagSystem();
+        setTagSystem(tagResponse.tagSystem);
+      } catch (error) {
+        console.error('Error fetching student data:', error);
+        toast.error('Failed to load quiz data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStudentData();
+  }, []);
+
+  const handleGenerateQuiz = () => {
     if (!title.trim()) {
       toast.error('Please enter a quiz title');
       return;
     }
+    setShowWizard(true);
+  };
 
+  const handleWizardGenerate = async (sections) => {
     try {
       setIsLoading(true);
       
-      // Create a basic quiz structure
       const newQuiz: Partial<Quiz> = {
         title: title.trim(),
         total_duration: duration,
-        sections: [],
+        sections: sections,
         header: [],
         instructions: [],
         footer: [],
         watermark: {},
       };
       
-      // Call API to generate quiz
       const response = await quizService.generateStudentQuiz(newQuiz);
-      
       toast.success('Quiz generated successfully!');
       navigate(`/student/quizzes/take/${response.quiz.id}`);
     } catch (error) {
@@ -42,6 +71,17 @@ export default function StudentQuizBuilderPage() {
       setIsLoading(false);
     }
   };
+
+  if (showWizard && tagSystem) {
+    return (
+      <QuizGeneratorWizard
+        questions={questions}
+        tagSystem={tagSystem}
+        onGenerate={handleWizardGenerate}
+        onCancel={() => setShowWizard(false)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -108,7 +148,7 @@ export default function StudentQuizBuilderPage() {
                     Generating Quiz...
                   </>
                 ) : (
-                  'Generate Practice Quiz'
+                  'Continue to Quiz Generator'
                 )}
               </button>
             </div>
@@ -121,8 +161,8 @@ export default function StudentQuizBuilderPage() {
         <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
           <li>Enter a title for your practice quiz</li>
           <li>Set the duration in minutes</li>
-          <li>Click "Generate Practice Quiz" to create a quiz with questions matching your learning level</li>
-          <li>The quiz will be automatically generated based on your previous performance</li>
+          <li>Use the quiz generator to customize your questions</li>
+          <li>Questions will be filtered based on your batch and learning level</li>
         </ul>
       </div>
     </div>

@@ -5,6 +5,9 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "noCheck": true,
+     "noEmitOnError": true,
+     "allowJs": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

@@ -189,5 +189,14 @@ export const quizService = {
       throw new Error(error.response?.data?.message || 'Failed to fetch student quizzes');
     }
   },
+  // Add this to your existing quizService
+  generateStudentQuiz: async (quizData) => {
+    try {
+      const response = await api.post('/student/quizzes/generate', quizData);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to generate student quiz');
+    }
+  }
 };
 export default quizService;

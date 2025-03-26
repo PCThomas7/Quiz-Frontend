@@ -42,4 +42,14 @@ export const questionService = {
     });
     return response.data;
   },
+  
+  // Add this to your existing questionService
+  getTagSystem: async () => {
+    try {
+      const response = await api.get('/questions/tag-system');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch tag system');
+    }
+  }
 };
