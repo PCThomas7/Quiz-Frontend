@@ -15,6 +15,21 @@ export const QuizReport: React.FC<QuizReportProps> = ({
   onRetake,
   onBackToDashboard,
 }) => {
+  // Add a utility function to format time
+  const formatTimeSpent = (seconds: number): string => {
+    if (!seconds) return "0m 0s";
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -45,6 +60,32 @@ export const QuizReport: React.FC<QuizReportProps> = ({
               <div className="text-center">
                 <p className="text-sm text-gray-600">Unattempted</p>
                 <p className="text-2xl font-bold text-gray-600">{attempt.unattemptedAnswers}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Time Spent Information */}
+          <div className="bg-purple-50 rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-2">Time Analysis</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Total Time Spent</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {formatTimeSpent(attempt.timeSpent)}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Time Limit</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {quiz.timeLimit ? `${quiz.timeLimit} minutes` : 'No limit'}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600">Avg. Time per Question</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {formatTimeSpent(Math.floor(attempt.timeSpent / 
+                    (attempt.correctAnswers + attempt.incorrectAnswers + attempt.unattemptedAnswers)))}
+                </p>
               </div>
             </div>
           </div>

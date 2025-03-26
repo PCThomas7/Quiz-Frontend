@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Quiz } from '../../types/types';
 import { QuizTaker } from '../../components/admin/QuizTaker/QuizTaker';
@@ -10,7 +10,8 @@ export default function StudentQuizTakerPage() {
   const { quizId } = useParams();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const startTimeRef = useRef<number>(Date.now());
+  
   useEffect(() => {
     const fetchQuiz = async () => {
       if (quizId) {
@@ -18,6 +19,8 @@ export default function StudentQuizTakerPage() {
           setLoading(true);
           const data = await quizService.getQuiz(quizId);
           setQuiz(data.quiz);
+          // Set the start time when quiz is loaded
+          startTimeRef.current = Date.now();
         } catch (error) {
           console.error('Error fetching quiz:', error);
           toast.error('Failed to load quiz');
@@ -32,11 +35,24 @@ export default function StudentQuizTakerPage() {
 
   const handleSubmit = async (answers: Record<string, string[]>) => {
     try {
-      // Changed from submitQuiz to submitQuizAttempt
+      // Calculate time spent
+      const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      
+      // Calculate metrics
+      const totalQuestions = quiz?.sections.reduce(
+        (total, section) => total + section.questions.length,
+        0
+      ) || 0;
+      
+      const answeredQuestions = Object.keys(answers).length;
+      
       await quizService.submitQuizAttempt(quizId!, {
         answers,
         completed: true,
-        timeSpent: quiz?.timeLimit ? quiz.timeLimit * 60 : 0
+        timeSpent,
+        correctAnswers: answeredQuestions, // This will be calculated on the backend
+        incorrectAnswers: 0, // This will be calculated on the backend
+        unattemptedAnswers: totalQuestions - answeredQuestions
       });
       
       toast.success('Quiz submitted successfully!');

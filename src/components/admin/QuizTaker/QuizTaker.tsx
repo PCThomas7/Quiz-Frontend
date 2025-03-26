@@ -20,13 +20,11 @@ interface QuestionStatus {
   markedForReview: boolean;
   selectedAnswers: string[];
 }
-interface QuizTakerProps {
-  quiz: Quiz;
-  onSubmit: (answers: Record<string, string[]>) => void;
-  onBackToDashboard?: () => void;
-}
-
-export function QuizTaker({ quiz, onSubmit, onBackToDashboard }: QuizTakerProps) {
+export const QuizTaker: React.FC<QuizTakerProps> = ({
+  quiz,
+  onSubmit,
+  onBackToDashboard,
+}) => {
   const navigate = useNavigate();
   // View states
   const [view, setView] = useState<"instructions" | "quiz" | "report">("instructions");

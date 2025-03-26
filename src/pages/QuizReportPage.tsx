@@ -123,6 +123,21 @@ const QuizReportPage: React.FC = () => {
     }
   };
 
+  // Add a utility function to format time
+  const formatTimeSpent = (seconds: number): string => {
+    if (!seconds) return "0m 0s";
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -178,6 +193,43 @@ const QuizReportPage: React.FC = () => {
           </button>
         </div>
       </div>
+      
+      {/* Add Time Spent Information Card */}
+      {attempt && (
+        <div className="bg-white shadow rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-blue-800 mb-2">Score</h3>
+              <p className="text-3xl font-bold text-blue-700">
+                {attempt.score}/{attempt.maxScore}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                {((attempt.score / attempt.maxScore) * 100).toFixed(2)}%
+              </p>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-purple-800 mb-2">Time Spent</h3>
+              <p className="text-3xl font-bold text-purple-700">
+                {formatTimeSpent(attempt.timeSpent)}
+              </p>
+              <p className="text-sm text-purple-600 mt-1">
+                {quiz.timeLimit ? `Time Limit: ${quiz.timeLimit} minutes` : 'No time limit'}
+              </p>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-green-800 mb-2">Completion</h3>
+              <p className="text-3xl font-bold text-green-700">
+                {attempt.correctAnswers + attempt.incorrectAnswers}/{attempt.correctAnswers + attempt.incorrectAnswers + attempt.unattemptedAnswers}
+              </p>
+              <p className="text-sm text-green-600 mt-1">
+                Questions Answered
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {viewMode === 'basic' ? (
         <QuizReport
