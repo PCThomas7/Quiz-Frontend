@@ -197,6 +197,25 @@ export const quizService = {
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to generate student quiz');
     }
+  },
+  getStudentCreatedQuizzes: async () => {
+    try {
+      const response = await api.get('/student/my-quizzes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching student created quizzes:', error);
+      throw error;
+    }
+  },
+  
+  deleteStudentQuiz: async (quizId: string) => {
+    try {
+      const response = await api.delete(`/student/my-quizzes/${quizId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting student quiz:', error);
+      throw error;
+    }
   }
 };
 export default quizService;
