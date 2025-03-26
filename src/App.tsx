@@ -28,12 +28,15 @@ import StudentQuizBuilderPage from "./pages/student/StudentQuizBuilderPage";
 import { StudentLayout } from "./components/layouts/StudentLayout";
 import { AdminLayout } from "./components/layouts/AdminLayout";
 
+// Add this import
+import StudentAnalyticsPage from "./pages/student/StudentAnalyticsPage";
+
 function App() {
   return (
     <RecoilRoot>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster position="top-right" />
+      <AuthProvider>
+        <BrowserRouter>
+          <Toaster position="top-center" />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
@@ -76,7 +79,7 @@ function App() {
               <Route path="quizzes" element={<StudentQuizListPage />} />
               <Route path="quizzes/create" element={<StudentQuizBuilderPage />} />
               <Route path="quizzes/take/:quizId" element={<StudentQuizTakerPage />} />
-              <Route path="analytics" element={<StudentAnalyticsDashboard studentId="10" />} />
+              <Route path="analytics" element={<StudentAnalyticsPage/>} />
             </Route>
 
             {/* Quiz Report Route */}
@@ -89,11 +92,13 @@ function App() {
               }
             />
 
+          
+            
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+        </BrowserRouter>
+      </AuthProvider>
     </RecoilRoot>
   );
 }
