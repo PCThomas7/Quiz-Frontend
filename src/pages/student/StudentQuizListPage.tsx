@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Quiz } from '../../types/types';
 import { quizService } from '../../services/quizService';
 import toast from 'react-hot-toast';
+import { QuizCard } from '../../components/student/QuizCard/QuizCard';
 
 export default function StudentQuizListPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -16,18 +17,7 @@ export default function StudentQuizListPage() {
       try {
         setLoading(true);
         const response = await quizService.getStudentQuizzes();
-        
-        // Transform and filter quizzes if needed
-        const availableQuizzes = response.quizzes.map(quiz => ({
-          ...quiz,
-          attempted: false, // You might want to check this from quiz attempts
-          totalQuestions: quiz.sections.reduce(
-            (acc, section) => acc + section.questions.length, 
-            0
-          )
-        }));
-        
-        setQuizzes(availableQuizzes);
+        setQuizzes(response.quizzes);
       } catch (error) {
         console.error('Error fetching quizzes:', error);
         toast.error('Failed to load quizzes');
@@ -84,39 +74,12 @@ export default function StudentQuizListPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {quizzes.map((quiz) => (
-            <div key={quiz.id} className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-2">{quiz.title}</h2>
-                <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-                  <span>Duration: {quiz.timeLimit} minutes</span>
-                  <span>{quiz.sections.reduce((acc, section) => acc + section.questions.length, 0)} questions</span>
-                </div>
-                
-                {quiz.attempted ? (
-                  <div className="mt-4 flex space-x-2">
-                    <button
-                      onClick={() => handleViewReport(quiz.id)}
-                      className="flex-1 bg-indigo-100 text-indigo-700 py-2 px-4 rounded hover:bg-indigo-200 transition-colors"
-                    >
-                      View Report
-                    </button>
-                    <button
-                      onClick={() => handleTakeQuiz(quiz.id)}
-                      className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors"
-                    >
-                      Retake Quiz
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleTakeQuiz(quiz.id)}
-                    className="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition-colors"
-                  >
-                    Start Quiz
-                  </button>
-                )}
-              </div>
-            </div>
+            <QuizCard 
+              key={quiz.id}
+              quiz={quiz}
+              onTakeQuiz={handleTakeQuiz}
+              onViewReport={handleViewReport}
+            />
           ))}
         </div>
       )}

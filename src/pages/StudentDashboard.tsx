@@ -19,9 +19,9 @@ export default function StudentDashboard() {
         const response = await quizService.getStudentQuizzes();
         
         // Filter for recent and upcoming quizzes
-        const now = new Date();
+        // The backend now provides the attempted status
         const recent = response.quizzes?.filter((q: Quiz) => 
-          q.attempted && new Date(q.updatedAt) <= now
+          q.attempted
         ).slice(0, 3) || [];
         
         const upcoming = response.quizzes?.filter((q: Quiz) => 
@@ -76,6 +76,7 @@ export default function StudentDashboard() {
           <h3 className="text-lg font-medium text-indigo-800 mb-2">Quizzes Completed</h3>
           <p className="text-3xl font-bold text-indigo-600">
             {recentQuizzes.length}
+            {console.log(recentQuizzes)}
           </p>
           <button 
             onClick={handleViewAllQuizzes}
