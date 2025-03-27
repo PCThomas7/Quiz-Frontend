@@ -19,7 +19,7 @@ export const HeaderSection = ({
         Header Notes (Optional)
       </label>
       <div className="space-y-2">
-        {headerItems.map((headerItem, index) => (
+        {headerItems?.map((headerItem, index) => (
           <div key={index} className="flex items-center gap-2">
             <span className="text-sm">{index + 1}.</span>
             <span className="flex-1">{headerItem}</span>

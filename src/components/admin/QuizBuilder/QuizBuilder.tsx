@@ -143,7 +143,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
       };
 
       // Save quiz to backend
-      const response = !quiz.id
+      const response = quiz._id
         ? await quizService.updateQuiz(quiz.id, updatedQuiz)
         : await quizService.createQuiz(updatedQuiz);
 
@@ -183,7 +183,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
       }
 
       toast.success("Quiz saved successfully!");
-      onSave({ ...response.data.quiz, id: quizIdToUse }, updatedQuestions);
+      onSave({ ...response.data.quiz , id: quizIdToUse }, updatedQuestions);
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save quiz");
@@ -232,13 +232,13 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
         </div>
 
         <HeaderSection
-          headerItems={quiz.header}
+          headerItems={quiz.header || quiz.metadata?.header || []}
           newHeader={newHeader}
           onAddHeader={(header) => {
             if (header.trim()) {
               setQuiz((prev) => ({
                 ...prev,
-                header: [...prev.header, header],
+                header: [...prev.header || [], header],
               }));
               setNewHeader("");
             }
@@ -263,7 +263,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
           <input
             type="number"
             id="duration"
-            value={quiz.total_duration}
+            value={quiz.total_duration || quiz.timeLimit}
             onChange={(e) =>
               setQuiz((prev) => ({
                 ...prev,
@@ -277,7 +277,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
 
         {/* Instructions */}
         <InstructionSection
-          instructions={quiz.instructions}
+          instructions={quiz.instructions || quiz.metadata?.instructions}
           newInstruction={newInstruction}
           onAddInstruction={(instruction) => {
             if (instruction.trim()) {
@@ -299,7 +299,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
 
         {/* Footer */}
         <FooterSection
-          footerItems={quiz.footer}
+          footerItems={quiz.footer || quiz.metadata?.footer}
           newFooter={newFooter}
           onAddFooter={(footer) => {
             if (footer.trim()) {
@@ -411,7 +411,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
         <div className="bg-gray-50 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Summary</h3>
           <div className="text-sm text-gray-600">
-            <div>Total Duration: {quiz.total_duration} minutes</div>
+            <div>Total Duration: {quiz.total_duration  || quiz.timeLimit} minutes</div>
             <div>Total Marks: {quiz.total_marks}</div>
             <div>
               Total Questions:{" "}

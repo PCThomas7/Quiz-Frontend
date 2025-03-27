@@ -19,7 +19,7 @@ export const InstructionSection = ({
         Instructions (Optional)
       </label>
       <div className="space-y-2">
-        {instructions.map((instruction, index) => (
+        {instructions?.map((instruction, index) => (
           <div key={index} className="flex items-center gap-2">
             <span className="text-sm">{index + 1}.</span>
             <span className="flex-1">{instruction}</span>

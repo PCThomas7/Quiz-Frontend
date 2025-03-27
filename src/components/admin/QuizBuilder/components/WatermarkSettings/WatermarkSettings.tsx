@@ -23,7 +23,7 @@ export const WatermarkSettings = ({
           <input
             type="checkbox"
             id="watermarkEnabled"
-            checked={watermark.enabled}
+            checked={watermark?.enabled}
             onChange={(e) =>
               onWatermarkChange({
                 ...watermark,
@@ -39,7 +39,7 @@ export const WatermarkSettings = ({
             Enable Watermark
           </label>
         </div>
-        {watermark.enabled && (
+        {watermark?.enabled && (
           <div className="flex-1">
             <input
               type="text"

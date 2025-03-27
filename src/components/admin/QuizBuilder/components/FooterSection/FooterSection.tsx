@@ -19,7 +19,7 @@ export const FooterSection = ({
         Footer Notes (Optional)
       </label>
       <div className="space-y-2">
-        {footerItems.map((footerItem, index) => (
+        {footerItems?.map((footerItem, index) => (
           <div key={index} className="flex items-center gap-2">
             <span className="text-sm">{index + 1}.</span>
             <span className="flex-1">{footerItem}</span>
