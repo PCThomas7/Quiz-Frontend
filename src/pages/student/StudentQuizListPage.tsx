@@ -22,7 +22,10 @@ export default function StudentQuizListPage() {
         
         // Fetch assigned quizzes
         const assignedResponse = await quizService.getStudentQuizzes();
-        setAssignedQuizzes(assignedResponse.quizzes);
+        
+        // Sort quizzes: upcoming first, then available, then expired
+        const sortedQuizzes = sortQuizzesBySchedule(assignedResponse.quizzes || []);
+        setAssignedQuizzes(sortedQuizzes);
         
         // Fetch created quizzes
         const createdResponse = await quizService.getStudentCreatedQuizzes();
@@ -38,7 +41,47 @@ export default function StudentQuizListPage() {
     fetchQuizzes();
   }, []);
 
+  // Helper function to sort quizzes by schedule status
+  const sortQuizzesBySchedule = (quizzes: Quiz[]) => {
+    const now = new Date();
+    
+    return [...quizzes].sort((a, b) => {
+      // Helper function to determine quiz status
+      const getQuizPriority = (quiz: Quiz) => {
+        if (!quiz.isScheduled) return 1; // Always available quizzes
+        
+        const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
+        const endDate = quiz.endDate ? new Date(quiz.endDate) : null;
+        
+        if (startDate && now < startDate) return 0; // Upcoming quizzes first
+        if (startDate && endDate && now >= startDate && now <= endDate) return 1; // Available quizzes next
+        return 2; // Expired quizzes last
+      };
+      
+      return getQuizPriority(a) - getQuizPriority(b);
+    });
+  };
+
   const handleTakeQuiz = (quizId: string) => {
+    // Check if quiz is available before navigating
+    const quiz = [...assignedQuizzes, ...createdQuizzes].find(q => q.id === quizId);
+    
+    if (quiz && quiz.isScheduled) {
+      const now = new Date();
+      const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
+      const endDate = quiz.endDate ? new Date(quiz.endDate) : null;
+      
+      if (startDate && now < startDate) {
+        toast.error('This quiz is not available yet');
+        return;
+      }
+      
+      if (endDate && now > endDate) {
+        toast.error('This quiz has expired');
+        return;
+      }
+    }
+    
     navigate(`/student/quizzes/take/${quizId}`);
   };
 

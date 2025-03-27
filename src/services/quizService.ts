@@ -190,12 +190,42 @@ export const quizService = {
   getStudentQuizzes: async () => {
     try {
       const response = await api.get('/student/quizzes');
+      if (response.data.quizzes) {
+        const now = new Date();
+        response.data.quizzes = response.data.quizzes.map(quiz => {
+          if (quiz.isScheduled) {
+            const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
+            const endDate = quiz.endDate ? new Date(quiz.endDate) : null;
+            
+            // Add availability status
+            quiz.isAvailable = !startDate || !endDate || (now >= startDate && now <= endDate);
+            quiz.isUpcoming = startDate && now < startDate;
+            quiz.isExpired = endDate && now > endDate;
+          } else {
+            quiz.isAvailable = true;
+            quiz.isUpcoming = false;
+            quiz.isExpired = false;
+          }
+          return quiz;
+        });
+      }
       return response.data;
     } catch (error) {
       console.error('Error fetching student quizzes:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch student quizzes');
     }
   },
+
+  getQuizSchedule: async (quizId: string) => {
+    try {
+      const response = await api.get(`/quizzes/${quizId}/schedule`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching quiz schedule:', error);
+      throw new Error(error.response?.data?.message || 'Failed to fetch quiz schedule');
+    }
+  },
+  
   // Add this to your existing quizService
   generateStudentQuiz: async (quizData) => {
     try {

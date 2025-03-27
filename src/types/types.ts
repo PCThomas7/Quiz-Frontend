@@ -89,6 +89,11 @@ export interface Quiz {
   isScheduled?: boolean;
   startDate?: string;
   endDate?: string;
+  
+  // These are computed fields for the frontend
+  isAvailable?: boolean;
+  isUpcoming?: boolean;
+  isExpired?: boolean;
 }
 
 export interface ExtendedQuiz extends Quiz {
