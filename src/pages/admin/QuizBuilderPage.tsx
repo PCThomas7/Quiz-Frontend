@@ -67,7 +67,7 @@ export default function QuizBuilderPage() {
     fetchData();
   }, [quizId]);
 
-  const handleSaveQuiz = async (savedQuiz: Quiz, updatedQuestions?: Question[]) => {
+  const handleSaveQuiz = async () => {
     try {
       toast.success('Quiz saved successfully!');
       navigate('/admin/quizzes');

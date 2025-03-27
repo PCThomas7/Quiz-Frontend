@@ -183,7 +183,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
       }
 
       toast.success("Quiz saved successfully!");
-      onSave({ ...response.data.quiz , id: quizIdToUse }, updatedQuestions);
+      onSave();
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save quiz");
