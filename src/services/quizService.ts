@@ -4,6 +4,8 @@ import { api } from './api';
 // Add these methods to your existing quizService.ts file
 
 // Update the quizService object to include batch assignment methods
+// Add scheduling fields to the createQuiz and updateQuiz methods
+
 export const quizService = {
   // Quiz CRUD Operations
   getQuizzes: async () => {
@@ -16,18 +18,23 @@ export const quizService = {
     return response.data;
   },
   
-  createQuiz: async (quizData) => {
-    const response = await api.post('/quizzes', quizData);
-    return {
-      data: {
-        quiz: response.data.quiz,
-        id: response.data.quiz.id
-      }
-    };
+  createQuiz: async (quiz: Quiz) => {
+    const response = await api.post('/quizzes', {
+      ...quiz,
+      isScheduled: quiz.isScheduled || false,
+      startDate: quiz.startDate,
+      endDate: quiz.endDate
+    });
+    return response.data;
   },
   
-  updateQuiz: async (quizId, quizData) => {
-    const response = await api.put(`/quizzes/${quizId}`, quizData);
+  updateQuiz: async (id: string, quiz: Quiz) => {
+    const response = await api.put(`/quizzes/${id}`, {
+      ...quiz,
+      isScheduled: quiz.isScheduled || false,
+      startDate: quiz.startDate,
+      endDate: quiz.endDate
+    });
     return response.data;
   },
   

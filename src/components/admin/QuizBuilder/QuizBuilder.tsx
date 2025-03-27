@@ -16,6 +16,7 @@ import { FooterSection } from "./components/FooterSection/FooterSection";
 import { WatermarkSettings } from "./components/WatermarkSettings/WatermarkSettings";
 import { useAuth } from "../../../contexts/AuthContext";
 import { BatchSelector } from "./components/BatchSelector/BatchSelector";
+import { ScheduleSettings } from "./components/ScheduleSettings/ScheduleSettings";
 
 interface QuizBuilderProps {
   questions: Question[];
@@ -70,6 +71,14 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     useState<boolean>(false);
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
+  const [isScheduled, setIsScheduled] = useState<boolean>(
+    initialQuiz?.isScheduled || false
+  );
+  const [startDate, setStartDate] = useState<string>(
+    initialQuiz?.startDate || ""
+  );
+  const [endDate, setEndDate] = useState<string>(initialQuiz?.endDate || "");
+
   // Add helper function to get available questions
   const getAvailableQuestions = (sectionId: string) => {
     if (!quiz?.sections) return [];
@@ -82,6 +91,16 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
           section.questions.some((q) => q.id === question.id)
       );
     });
+  };
+
+  const handleScheduleChange = (
+    scheduled: boolean,
+    start?: string,
+    end?: string
+  ) => {
+    setIsScheduled(scheduled);
+    if (start) setStartDate(start);
+    if (end) setEndDate(end);
   };
 
   // Add useEffect to fetch data from backend
@@ -132,58 +151,53 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
       return;
     }
 
+    // Validate schedule if enabled
+    if (isScheduled) {
+      if (!startDate) {
+        toast.error("Please set a start date for the scheduled quiz");
+        return;
+      }
+      if (!endDate) {
+        toast.error("Please set an end date for the scheduled quiz");
+        return;
+      }
+      if (new Date(startDate) >= new Date(endDate)) {
+        toast.error("End date must be after start date");
+        return;
+      }
+    }
+
+    // Validate schedule if enabled
+    if (isScheduled) {
+      if (!startDate) {
+        toast.error("Please set a start date for the scheduled quiz");
+        return;
+      }
+      if (!endDate) {
+        toast.error("Please set an end date for the scheduled quiz");
+        return;
+      }
+      if (new Date(startDate) >= new Date(endDate)) {
+        toast.error("End date must be after start date");
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const updatedQuiz = {
         ...quiz,
         batchAssignment,
         assignedBatches: batchAssignment === "SPECIFIC" ? selectedBatches : [],
+        isScheduled,
+        startDate: isScheduled ? startDate : undefined,
+        endDate: isScheduled ? endDate : undefined,
         createdBy: user?.id || "",
         updatedAt: new Date().toISOString(),
       };
 
-      // Save quiz to backend
-      const response = quiz._id
-        ? await quizService.updateQuiz(quiz.id, updatedQuiz)
-        : await quizService.createQuiz(updatedQuiz);
-
-      // Get the correct quiz ID from response
-      const quizIdToUse = response.data?.quiz?.id || response.data?.id || quiz.id;
-      
-      if (!quizIdToUse) {
-          throw new Error('Failed to get quiz ID from response');
-      }
-
-      // Update questions with the NEW quiz ID
-      const updatedQuestions = questions.map((q) => {
-          const isUsedInThisQuiz = quiz.sections.some((section) =>
-              section.questions.some((sq) => sq.id === q.id)
-          );
-
-          if (isUsedInThisQuiz) {
-              const usedInQuizzes = new Set(q.usedInQuizzes || []);
-              usedInQuizzes.add(quizIdToUse);
-              return {
-                  ...q,
-                  usedInQuizzes: Array.from(usedInQuizzes),
-              };
-          }
-          return q;
-      });
-
-      // Update questions in backend
-      try {
-          const usedQuestionIds = quiz.sections
-              .flatMap(section => section.questions.map(q => q.id));
-          
-          await questionService.updateQuizUsage(quizIdToUse, usedQuestionIds);
-      } catch (error) {
-          console.error("Failed to update questions:", error);
-          toast.error("Quiz saved but question usage tracking failed");
-      }
-
-      toast.success("Quiz saved successfully!");
-      onSave();
+      // Call the onSave prop with the updated quiz
+      onSave(updatedQuiz);
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save quiz");
@@ -238,7 +252,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
             if (header.trim()) {
               setQuiz((prev) => ({
                 ...prev,
-                header: [...prev.header || [], header],
+                header: [...(prev.header || []), header],
               }));
               setNewHeader("");
             }
@@ -330,6 +344,15 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
           }}
         />
 
+        <div className="mt-6">
+          <ScheduleSettings
+            isScheduled={isScheduled}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={handleScheduleChange}
+          />
+        </div>
+
         {/* Batch Assignment  */}
         <div className="border-t pt-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -411,7 +434,9 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
         <div className="bg-gray-50 p-4 rounded-md">
           <h3 className="text-lg font-medium text-gray-900 mb-2">Summary</h3>
           <div className="text-sm text-gray-600">
-            <div>Total Duration: {quiz.total_duration  || quiz.timeLimit} minutes</div>
+            <div>
+              Total Duration: {quiz.total_duration || quiz.timeLimit} minutes
+            </div>
             <div>Total Marks: {quiz.total_marks}</div>
             <div>
               Total Questions:{" "}

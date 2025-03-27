@@ -67,8 +67,13 @@ export default function QuizBuilderPage() {
     fetchData();
   }, [quizId]);
 
-  const handleSaveQuiz = async () => {
+  const handleSaveQuiz = async (updatedQuiz: Quiz) => {
     try {
+      if (quizId) {
+        await quizService.updateQuiz(quizId, updatedQuiz);
+      } else {
+        await quizService.createQuiz(updatedQuiz);
+      }
       toast.success('Quiz saved successfully!');
       navigate('/admin/quizzes');
     } catch (err) {

@@ -64,8 +64,10 @@ export interface Batch {
 }
 
 // Update the Quiz interface to include batch assignment
+// Add these fields to your Quiz interface
 export interface Quiz {
   id: string;
+  _id?: string;
   title: string;
   description?: string;
   total_duration: number;
@@ -82,6 +84,11 @@ export interface Quiz {
   sections: QuizSection[];
   batchAssignment?: string; // 'NONE', 'ALL', or 'SPECIFIC'
   assignedBatches?: string[]; // Array of batch IDs when batchAssignment is 'SPECIFIC'
+  
+  // Add scheduling fields
+  isScheduled?: boolean;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ExtendedQuiz extends Quiz {
