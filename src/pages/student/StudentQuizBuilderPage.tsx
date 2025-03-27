@@ -110,7 +110,7 @@ const StudentQuizBuilderPage: React.FC = () => {
         createdBy: user?.id || "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        duration: totalDuration,
+        timeLimit: totalDuration,
         isPublished: false,
         batchAssignment: "NONE",
         assignedBatches: [],

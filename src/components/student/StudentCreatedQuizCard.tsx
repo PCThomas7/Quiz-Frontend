@@ -26,6 +26,9 @@ export const StudentCreatedQuizCard: React.FC<StudentCreatedQuizCardProps> = ({
     }
   };
 
+  // Check if the quiz has the attempted property, if not default to false
+  const hasAttempted = quiz.attempted || false;
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300">
       <div className="p-5">
@@ -44,7 +47,7 @@ export const StudentCreatedQuizCard: React.FC<StudentCreatedQuizCardProps> = ({
         </div>
         
         <div className="flex flex-col space-y-2">
-          {quiz.attempted ? (
+          {hasAttempted ? (
             <div className="flex space-x-2">
               <button
                 onClick={() => onViewReport(quiz.id)}
