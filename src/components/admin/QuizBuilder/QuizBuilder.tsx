@@ -16,7 +16,7 @@ import { FooterSection } from "./components/FooterSection/FooterSection";
 import { WatermarkSettings } from "./components/WatermarkSettings/WatermarkSettings";
 import { useAuth } from "../../../contexts/AuthContext";
 import { BatchSelector } from "./components/BatchSelector/BatchSelector";
-import { ScheduleSettings } from "./components/ScheduleSettings/ScheduleSettings";
+import { ScheduleSettings } from './components/ScheduleSettings/ScheduleSettings';
 
 interface QuizBuilderProps {
   questions: Question[];
@@ -93,6 +93,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
     });
   };
 
+  // Add this function to handle schedule changes
   const handleScheduleChange = (
     scheduled: boolean,
     start?: string,
@@ -344,6 +345,7 @@ export const QuizBuilder: React.FC<QuizBuilderProps> = ({
           }}
         />
 
+       
         <div className="mt-6">
           <ScheduleSettings
             isScheduled={isScheduled}
