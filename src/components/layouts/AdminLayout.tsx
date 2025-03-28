@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
-import { FiMenu, FiX, FiHome, FiList, FiPlus, FiUpload, FiBox, FiTag, FiUsers, FiLogOut } from 'react-icons/fi';
+import { FiMenu, FiX, FiHome, FiList, FiPlus, FiUpload, FiBox, FiTag, FiUsers, FiLogOut, FiMessageSquare } from 'react-icons/fi';
 
 export function AdminLayout() {
   const location = useLocation();
@@ -27,6 +27,7 @@ export function AdminLayout() {
     { path: '/admin/quizzes', label: 'View Quizzes', icon: <FiBox className="w-5 h-5" /> },
     { path: '/admin/tags', label: 'Manage Tags', icon: <FiTag className="w-5 h-5" /> },
     { path: '/admin/users', label: 'Manage Users', icon: <FiUsers className="w-5 h-5" /> },
+    { path: '/admin/community', label: 'Community', icon: <FiMessageSquare className="w-5 h-5" /> },
   ];
 
   return (
@@ -49,7 +50,8 @@ export function AdminLayout() {
                 className={`flex items-center py-3 px-4 rounded-md transition-colors duration-150 ${
                   (location.pathname === item.path || 
                    (item.path === '/admin/questions' && location.pathname.includes('/admin/questions') && 
-                    !location.pathname.includes('/create') && !location.pathname.includes('/upload')))
+                    !location.pathname.includes('/create') && !location.pathname.includes('/upload')) ||
+                   (item.path === '/admin/community' && location.pathname.includes('/admin/community')))
                     ? 'bg-blue-700 text-white'
                     : 'text-blue-100 hover:bg-blue-700 hover:text-white'
                 }`}
@@ -73,7 +75,8 @@ export function AdminLayout() {
                   {navItems.find(item => 
                     location.pathname === item.path || 
                     (item.path === '/admin/questions' && location.pathname.includes('/admin/questions') && 
-                     !location.pathname.includes('/create') && !location.pathname.includes('/upload'))
+                     !location.pathname.includes('/create') && !location.pathname.includes('/upload')) ||
+                    (item.path === '/admin/community' && location.pathname.includes('/admin/community'))
                   )?.label || 'Dashboard'}
                 </h2>
               </div>

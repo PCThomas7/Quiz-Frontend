@@ -21,6 +21,11 @@ import QuizListPage from "./pages/admin/QuizListPage";
 import TagManagerPage from "./pages/admin/TagManagerPage";
 import QuizTakerPage from "./pages/admin/QuizTakerPage";
 import UserManagement from "./pages/admin/UserManagement";
+// Import community pages
+import CommunityApp from "./pages/admin/CommunityApp";
+import CommunityCreatePost from "./pages/admin/CommunityCreatePost";
+import CommunityEditPost from "./pages/admin/CommunityEditPost";
+import CommunityPostDetail from "./pages/admin/CommunityPostDetail";
 // Import student pages
 import StudentQuizListPage from "./pages/student/StudentQuizListPage";
 import StudentQuizTakerPage from "./pages/student/StudentQuizTakerPage";
@@ -65,6 +70,11 @@ function App() {
               <Route path="quizzes/take/:quizId" element={<QuizTakerPage />} />
               <Route path="tags" element={<TagManagerPage />} />
               <Route path="users" element={<UserManagement />} />
+              {/* Community routes */}
+              <Route path="community" element={<CommunityApp />} />
+              <Route path="community/create" element={<CommunityCreatePost />} />
+              <Route path="community/edit/:postId" element={<CommunityEditPost />} />
+              <Route path="community/:postId" element={<CommunityPostDetail />} />
             </Route>
 
             {/* Student routes */}
