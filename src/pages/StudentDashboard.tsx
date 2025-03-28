@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Quiz } from '../types/types';
 import { quizService } from '../services/quizService';
+import { FaClock } from 'react-icons/fa'; // Import clock icon for scheduled quizzes
 
 export default function StudentDashboard() {
   const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
@@ -30,16 +31,20 @@ export default function StudentDashboard() {
           q.attempted
         ).length || [].length;
         
+        // Sort upcoming quizzes by scheduled date if available
         const upcoming = response.quizzes?.filter((q: Quiz) => 
           !q.attempted
-        ).slice(0, 3) || [];
-
+        ) || [];
+        
+        // Sort upcoming quizzes: scheduled ones first (by start date), then non-scheduled
+        const sortedUpcoming = sortUpcomingQuizzes(upcoming).slice(0, 3);
+        
         const upcomingLength = response.quizzes?.filter((q: Quiz) => 
           !q.attempted
         ).length || [].length;
         
         setRecentQuizzes(recent);
-        setUpcomingQuizzes(upcoming);
+        setUpcomingQuizzes(sortedUpcoming);
         setRecentLength(recentLength);
         setUpcomingLength(upcomingLength);
       } catch (error) {
@@ -52,6 +57,58 @@ export default function StudentDashboard() {
     fetchDashboardData();
   }, []);
 
+  // Helper function to sort upcoming quizzes
+  const sortUpcomingQuizzes = (quizzes: Quiz[]) => {
+    const now = new Date();
+    
+    return [...quizzes].sort((a, b) => {
+      // If both quizzes are scheduled
+      if (a.isScheduled && b.isScheduled) {
+        const aStartDate = a.startDate ? new Date(a.startDate) : null;
+        const bStartDate = b.startDate ? new Date(b.startDate) : null;
+        
+        // If both have start dates, sort by earliest first
+        if (aStartDate && bStartDate) {
+          return aStartDate.getTime() - bStartDate.getTime();
+        }
+        
+        // If only one has a start date, prioritize it
+        if (aStartDate) return -1;
+        if (bStartDate) return 1;
+      }
+      
+      // If only one quiz is scheduled, prioritize it
+      if (a.isScheduled && !b.isScheduled) return -1;
+      if (!a.isScheduled && b.isScheduled) return 1;
+      
+      // If neither is scheduled, keep original order
+      return 0;
+    });
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Check if a quiz is available based on schedule
+  const isQuizAvailable = (quiz: Quiz) => {
+    if (!quiz.isScheduled) return true;
+    
+    const now = new Date();
+    const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
+    const endDate = quiz.endDate ? new Date(quiz.endDate) : null;
+    
+    return !startDate || !endDate || (now >= startDate && now <= endDate);
+  };
+
   const handleViewAllQuizzes = () => {
     navigate('/student/quizzes');
   };
@@ -61,6 +118,20 @@ export default function StudentDashboard() {
   };
 
   const handleTakeQuiz = (quizId: string) => {
+    // Find the quiz
+    const quiz = upcomingQuizzes.find(q => q.id === quizId);
+    
+    // Check if quiz is available based on schedule
+    if (quiz && quiz.isScheduled) {
+      const now = new Date();
+      const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
+      
+      if (startDate && now < startDate) {
+        // Quiz is not available yet
+        return;
+      }
+    }
+    
     navigate(`/student/quizzes/take/${quizId}`);
   };
 
@@ -181,15 +252,34 @@ export default function StudentDashboard() {
             {upcomingQuizzes.map((quiz) => (
               <div key={quiz.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                 <h3 className="font-medium text-gray-900 mb-2">{quiz.title}</h3>
+                
+                {/* Show scheduled info if quiz is scheduled */}
+                {quiz.isScheduled && quiz.startDate && (
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <FaClock className="mr-1 text-indigo-500" />
+                    <span>
+                      {formatDate(quiz.startDate)}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between text-sm text-gray-500 mb-3">
-                  <span>Duration: {quiz.total_duration} min</span>
+                  <span>Duration: {quiz.timeLimit || quiz.total_duration} min</span>
                   <span>{quiz.sections.reduce((acc, section) => acc + section.questions.length, 0)} questions</span>
                 </div>
+                
                 <button
                   onClick={() => handleTakeQuiz(quiz.id)}
-                  className="w-full mt-2 bg-indigo-600 text-white py-2 px-3 rounded hover:bg-indigo-700 transition-colors"
+                  disabled={quiz.isScheduled && !isQuizAvailable(quiz)}
+                  className={`w-full mt-2 py-2 px-3 rounded transition-colors ${
+                    (!quiz.isScheduled || isQuizAvailable(quiz))
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Start Quiz
+                  {quiz.isScheduled && !isQuizAvailable(quiz) 
+                    ? "Coming Soon" 
+                    : "Start Quiz"}
                 </button>
               </div>
             ))}
