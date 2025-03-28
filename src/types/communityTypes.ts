@@ -1,29 +1,39 @@
+export interface Attachment {
+  _id: string;
+  url: string;
+  type: string;
+  name: string;
+}
+
+export interface Comment {
+  _id: string;
+  content: string;
+  author: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CommunityPost {
-  _id?: string;
+  _id: string;
   title: string;
   content: string;
   author: {
     _id: string;
     name: string;
+    email: string;
   };
   tags?: string[];
-  attachments?: {
-    url: string;
-    type: string;
-    name: string;
-  }[];
-  likes?: number;
-  comments?: {
-    _id: string;
-    content: string;
-    author: {
-      _id: string;
-      name: string;
-    };
-    createdAt: string;
-  }[];
-  createdAt?: string;
-  updatedAt?: string;
+  attachments: Attachment[];
+  likes: number;
+  likedBy: string[];
+  likedByCurrentUser?: boolean;
+  comments?: Comment[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CommunityPostFormData {

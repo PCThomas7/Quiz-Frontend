@@ -36,6 +36,8 @@ import { AdminLayout } from "./components/layouts/AdminLayout";
 
 // Add this import
 import StudentAnalyticsPage from "./pages/student/StudentAnalyticsPage";
+import CommunityPage from './pages/CommunityPage';
+import PostDetailPage from './pages/PostDetailPage';
 
 function App() {
   return (
@@ -92,6 +94,8 @@ function App() {
               <Route path="quizzes/create" element={<StudentQuizBuilderPage />} />
               <Route path="quizzes/take/:quizId" element={<StudentQuizTakerPage />} />
               <Route path="analytics" element={<StudentAnalyticsPage/>} />
+              <Route path="community" element={<CommunityPage />} />
+              <Route path="community/:postId" element={<PostDetailPage />} />
             </Route>
 
             {/* Quiz Report Route */}

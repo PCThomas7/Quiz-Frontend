@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Quiz } from '../types/types';
 import { quizService } from '../services/quizService';
-import { FaClock } from 'react-icons/fa'; // Import clock icon for scheduled quizzes
+import { FaCalendarCheck, FaHistory, FaChartLine } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { DashboardCard } from '../components/student/dashboard/DashboardCard';
+import { QuizList } from '../components/student/dashboard/QuizList';
+import { WelcomeCard } from '../components/student/dashboard/WelcomeCard';
 
 export default function StudentDashboard() {
   const [recentQuizzes, setRecentQuizzes] = useState<Quiz[]>([]);
   const [upcomingQuizzes, setUpcomingQuizzes] = useState<Quiz[]>([]);
-  const [recentLength, setRecentLength] = useState<Number>(0);
-  const [upcomingLength, setUpcomingLength] = useState<Number>(0);
+  const [recentLength, setRecentLength] = useState<number>(0);
+  const [upcomingLength, setUpcomingLength] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -18,18 +22,16 @@ export default function StudentDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // In a real app, these would be separate API calls
         const response = await quizService.getStudentQuizzes();
         
         // Filter for recent and upcoming quizzes
-        // The backend now provides the attempted status
         const recent = response.quizzes?.filter((q: Quiz) => 
           q.attempted
         ).slice(0, 3) || [];
 
         const recentLength = response.quizzes?.filter((q: Quiz) => 
           q.attempted
-        ).length || [].length;
+        ).length || 0;
         
         // Sort upcoming quizzes by scheduled date if available
         const upcoming = response.quizzes?.filter((q: Quiz) => 
@@ -41,7 +43,7 @@ export default function StudentDashboard() {
         
         const upcomingLength = response.quizzes?.filter((q: Quiz) => 
           !q.attempted
-        ).length || [].length;
+        ).length || 0;
         
         setRecentQuizzes(recent);
         setUpcomingQuizzes(sortedUpcoming);
@@ -86,37 +88,6 @@ export default function StudentDashboard() {
     });
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Check if a quiz is available based on schedule
-  const isQuizAvailable = (quiz: Quiz) => {
-    if (!quiz.isScheduled) return true;
-    
-    const now = new Date();
-    const startDate = quiz.startDate ? new Date(quiz.startDate) : null;
-    const endDate = quiz.endDate ? new Date(quiz.endDate) : null;
-    
-    return !startDate || !endDate || (now >= startDate && now <= endDate);
-  };
-
-  const handleViewAllQuizzes = () => {
-    navigate('/student/quizzes');
-  };
-
-  const handleViewAnalytics = () => {
-    navigate('/student/analytics');
-  };
-
   const handleTakeQuiz = (quizId: string) => {
     // Find the quiz
     const quiz = upcomingQuizzes.find(q => q.id === quizId);
@@ -139,6 +110,14 @@ export default function StudentDashboard() {
     navigate(`/quiz-report/${quizId}`);
   };
 
+  const handleViewAnalytics = () => {
+    navigate('/student/analytics');
+  };
+
+  const handleViewAllQuizzes = () => {
+    navigate('/student/quizzes');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -148,144 +127,97 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name || 'Student'}</h1>
-      </div>
-
-      {/* Stats Overview */}
+    <div className="space-y-6">
+      <WelcomeCard userName={user?.name || 'Student'} />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-indigo-50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-indigo-800 mb-2">Quizzes Completed</h3>
-          <p className="text-3xl font-bold text-indigo-600">
-            {recentLength}
-           
-          </p>
-          <button 
-            onClick={handleViewAllQuizzes}
-            className="mt-4 text-sm text-indigo-600 hover:text-indigo-800"
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="md:col-span-2"
+        >
+          <DashboardCard 
+            title="Upcoming Quizzes" 
+            icon={<FaCalendarCheck className="h-5 w-5" />}
+            className="h-full"
           >
-            View all quizzes →
-          </button>
-        </div>
-        
-        <div className="bg-green-50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-green-800 mb-2">Average Score</h3>
-          <p className="text-3xl font-bold text-green-600">
-            {recentQuizzes.length > 0 
-              ? `${Math.round(recentQuizzes.reduce((acc, quiz) => acc + (quiz.userScore || 0), 0) / recentQuizzes.length)}%` 
-              : 'N/A'}
-          </p>
-          <button 
-            onClick={handleViewAnalytics}
-            className="mt-4 text-sm text-green-600 hover:text-green-800"
-          >
-            View analytics →
-          </button>
-        </div>
-        
-        <div className="bg-blue-50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-blue-800 mb-2">Upcoming Quizzes</h3>
-          <p className="text-3xl font-bold text-blue-600">
-            {upcomingLength}
-          </p>
-          <button 
-            onClick={handleViewAllQuizzes}
-            className="mt-4 text-sm text-blue-600 hover:text-blue-800"
-          >
-            View upcoming →
-          </button>
-        </div>
-      </div>
-
-      {/* Recent Quizzes */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Quizzes</h2>
-          <button 
-            onClick={handleViewAllQuizzes}
-            className="text-sm text-indigo-600 hover:text-indigo-800"
-          >
-            View all →
-          </button>
-        </div>
-        
-        {recentQuizzes.length === 0 ? (
-          <p className="text-gray-500 py-4">No recent quizzes found.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentQuizzes.map((quiz) => (
-              <div key={quiz.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <h3 className="font-medium text-gray-900 mb-2">{quiz.title}</h3>
-                <div className="flex justify-between text-sm text-gray-500 mb-3">
-                  <span>Score: {quiz.userScore || 0}%</span>
-                  <span>{new Date(quiz.updatedAt).toLocaleDateString()}</span>
-                </div>
-                <button
-                  onClick={() => handleViewReport(quiz.id)}
-                  className="w-full mt-2 bg-indigo-100 text-indigo-700 py-2 px-3 rounded hover:bg-indigo-200 transition-colors"
+            <QuizList 
+              quizzes={upcomingQuizzes}
+              emptyMessage="No upcoming quizzes available."
+              onQuizClick={handleTakeQuiz}
+            />
+            
+            {upcomingLength > 3 && (
+              <div className="mt-4 text-center">
+                <button 
+                  onClick={handleViewAllQuizzes}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                 >
-                  View Report
+                  View all {upcomingLength} upcoming quizzes
                 </button>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming Quizzes */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Upcoming Quizzes</h2>
-          <button 
-            onClick={handleViewAllQuizzes}
-            className="text-sm text-indigo-600 hover:text-indigo-800"
-          >
-            View all →
-          </button>
-        </div>
+            )}
+          </DashboardCard>
+        </motion.div>
         
-        {upcomingQuizzes.length === 0 ? (
-          <p className="text-gray-500 py-4">No upcoming quizzes found.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingQuizzes.map((quiz) => (
-              <div key={quiz.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                <h3 className="font-medium text-gray-900 mb-2">{quiz.title}</h3>
-                
-                {/* Show scheduled info if quiz is scheduled */}
-                {quiz.isScheduled && quiz.startDate && (
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <FaClock className="mr-1 text-indigo-500" />
-                    <span>
-                      {formatDate(quiz.startDate)}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between text-sm text-gray-500 mb-3">
-                  <span>Duration: {quiz.timeLimit || quiz.total_duration} min</span>
-                  <span>{quiz.sections.reduce((acc, section) => acc + section.questions.length, 0)} questions</span>
-                </div>
-                
-                <button
-                  onClick={() => handleTakeQuiz(quiz.id)}
-                  disabled={quiz.isScheduled && !isQuizAvailable(quiz)}
-                  className={`w-full mt-2 py-2 px-3 rounded transition-colors ${
-                    (!quiz.isScheduled || isQuizAvailable(quiz))
-                      ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  {quiz.isScheduled && !isQuizAvailable(quiz) 
-                    ? "Coming Soon" 
-                    : "Start Quiz"}
-                </button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <DashboardCard 
+            title="Performance" 
+            icon={<FaChartLine className="h-5 w-5" />}
+            className="h-full"
+          >
+            <div className="flex flex-col items-center justify-center py-4">
+              <div className="text-4xl font-bold text-indigo-600 mb-2">
+                {recentLength}
               </div>
-            ))}
-          </div>
-        )}
+              <p className="text-gray-500 text-center mb-6">Quizzes completed</p>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleViewAnalytics}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-md shadow-sm hover:shadow transition-all duration-200"
+              >
+                View Analytics
+              </motion.button>
+            </div>
+          </DashboardCard>
+        </motion.div>
       </div>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <DashboardCard 
+          title="Recent Quizzes" 
+          icon={<FaHistory className="h-5 w-5" />}
+        >
+          <QuizList 
+            quizzes={recentQuizzes}
+            emptyMessage="You haven't taken any quizzes yet."
+            onQuizClick={handleViewReport}
+            isRecent={true}
+          />
+          
+          {recentLength > 3 && (
+            <div className="mt-4 text-center">
+              <button 
+                onClick={handleViewAllQuizzes}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+              >
+                View all {recentLength} completed quizzes
+              </button>
+            </div>
+          )}
+        </DashboardCard>
+      </motion.div>
     </div>
   );
 }
