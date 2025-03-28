@@ -12,6 +12,7 @@ import QuizDashboard from "./pages/QuizDashboard";
 
 import QuizReportPage from "./pages/QuizReportPage";
 // Import admin pages
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import QuestionListPage from "./pages/admin/QuestionListPage";
 import QuestionCreatorPage from "./pages/admin/QuestionCreatorPage";
 import QuestionBulkUploadPage from "./pages/admin/QuestionBulkUploadPage";
@@ -52,7 +53,8 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="questions" replace />} />
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboardPage />} />
               <Route path="questions" element={<QuestionListPage />} />
               <Route path="questions/create" element={<QuestionCreatorPage />} />
               <Route path="questions/edit/:questionId" element={<QuestionCreatorPage />} />
@@ -91,8 +93,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-          
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,116 +1,105 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useState } from 'react';
+import { FiMenu, FiX, FiHome, FiList, FiPlus, FiUpload, FiBox, FiTag, FiUsers, FiLogOut } from 'react-icons/fi';
 
 export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     logout();
     navigate('/signin');
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const navItems = [
+    { path: '/admin/dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" /> },
+    { path: '/admin/questions', label: 'View Questions', icon: <FiList className="w-5 h-5" /> },
+    { path: '/admin/questions/create', label: 'Create Question', icon: <FiPlus className="w-5 h-5" /> },
+    { path: '/admin/questions/upload', label: 'Bulk Upload', icon: <FiUpload className="w-5 h-5" /> },
+    { path: '/admin/quizzes/create', label: 'Quiz Builder', icon: <FiPlus className="w-5 h-5" /> },
+    { path: '/admin/quizzes', label: 'View Quizzes', icon: <FiBox className="w-5 h-5" /> },
+    { path: '/admin/tags', label: 'Manage Tags', icon: <FiTag className="w-5 h-5" /> },
+    { path: '/admin/users', label: 'Manage Users', icon: <FiUsers className="w-5 h-5" /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-indigo-600">Quiz Admin</h1>
-            </div>
-            <div className="hidden md:flex space-x-6">
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-blue-800 to-indigo-900 text-white transition-all duration-300 ease-in-out fixed h-full z-10 overflow-y-auto`}>
+        <div className="flex items-center justify-between p-4 border-b border-blue-700">
+          <h1 className={`text-xl font-bold ${sidebarOpen ? 'block' : 'hidden'}`}>Quiz Admin</h1>
+          <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-blue-700 focus:outline-none">
+            {sidebarOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
+          </button>
+        </div>
+        
+        <nav className="mt-5">
+          <div className="px-4 space-y-1">
+            {navItems.map((item) => (
               <Link
-                to="/admin/questions"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname.includes('/admin/questions') && !location.pathname.includes('/create') && !location.pathname.includes('/upload')
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                key={item.path}
+                to={item.path}
+                className={`flex items-center py-3 px-4 rounded-md transition-colors duration-150 ${
+                  (location.pathname === item.path || 
+                   (item.path === '/admin/questions' && location.pathname.includes('/admin/questions') && 
+                    !location.pathname.includes('/create') && !location.pathname.includes('/upload')))
+                    ? 'bg-blue-700 text-white'
+                    : 'text-blue-100 hover:bg-blue-700 hover:text-white'
                 }`}
               >
-                View Questions
+                <span className="mr-3">{item.icon}</span>
+                {sidebarOpen && <span>{item.label}</span>}
               </Link>
-              <Link
-                to="/admin/questions/create"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/questions/create'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Create Question
-              </Link>
-              <Link
-                to="/admin/questions/upload"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/questions/upload'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Bulk Upload
-              </Link>
-              <Link
-                to="/admin/quizzes/create"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/quizzes/create'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Quiz Builder
-              </Link>
-              <Link
-                to="/admin/quizzes"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/quizzes'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                View Quizzes
-              </Link>
-              <Link
-                to="/admin/tags"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/tags'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Manage Tags
-              </Link>
-              <Link
-                to="/admin/users"
-                className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                  location.pathname === '/admin/users'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                Manage Users
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-700">
-                {user?.name}
+            ))}
+          </div>
+        </nav>
+      </div>
+
+      {/* Main content */}
+      <div className={`flex-1 transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+        {/* Top header */}
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              <div className="flex items-center">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {navItems.find(item => 
+                    location.pathname === item.path || 
+                    (item.path === '/admin/questions' && location.pathname.includes('/admin/questions') && 
+                     !location.pathname.includes('/create') && !location.pathname.includes('/upload'))
+                  )?.label || 'Dashboard'}
+                </h2>
               </div>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Logout
-              </button>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-2 rounded-md">
+                  {user?.name}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+                >
+                  <FiLogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </header>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <Outlet />
-        </div>
-      </main>
+        {/* Page content */}
+        <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
